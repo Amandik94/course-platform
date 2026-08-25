@@ -23,10 +23,10 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_spectacular',
 
-    # наши apps будем добавлять по мере создания:
+    # наши apps
     'apps.users',
-    # 'apps.courses',
-    # ...
+    'apps.courses',
+    'apps.lessons',
 ]
 
 MIDDLEWARE = [
