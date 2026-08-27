@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'apps.courses',
     'apps.lessons',
     'apps.enrollments',
+    'apps.assignments',
 ]
 
 MIDDLEWARE = [
