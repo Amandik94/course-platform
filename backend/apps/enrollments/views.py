@@ -10,6 +10,7 @@ from apps.lessons.models import Lesson
 from .models import Enrollment, LessonProgress
 from .permissions import IsEnrollmentOwner
 from .serializers import EnrollmentSerializer, LessonProgressSerializer
+from apps.certificates.services import issue_certificate
 
 
 class EnrollView(APIView):
@@ -96,6 +97,10 @@ class CompleteLessonView(APIView):
             course_completed = True
 
         enrollment.save()
+        
+        if course_completed:
+            issue_certificate(student=request.user, course=course)
+
 
         return Response({
             'lesson_progress': LessonProgressSerializer(lesson_progress).data,
