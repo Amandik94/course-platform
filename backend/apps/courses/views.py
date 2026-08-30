@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions
+from rest_framework.exceptions import ValidationError
 
 from .filters import CourseFilter
 from .models import Category, Course, Section
@@ -6,7 +7,12 @@ from .permissions import IsTeacherOwnerOrReadOnly
 from .serializers import (
     CategorySerializer, CourseDetailSerializer, CourseListSerializer, SectionSerializer,
 )
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
+
+@extend_schema_view(
+    get=extend_schema(tags=['Categories'], summary='Список категорий'),
+)
 
 class CategoryListView(generics.ListAPIView):
     """GET /api/v1/categories/ — публичный список категорий для фильтра"""
@@ -14,6 +20,11 @@ class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+
+@extend_schema_view(
+    get=extend_schema(tags=['Courses'], summary='Список курсов (каталог)'),
+    post=extend_schema(tags=['Courses'], summary='Создать курс (только teacher/admin)'),
+)
 
 class CourseListCreateView(generics.ListCreateAPIView):
     """
@@ -39,6 +50,11 @@ class CourseListCreateView(generics.ListCreateAPIView):
     def get_serializer_class(self):
         return CourseDetailSerializer if self.request.method == 'POST' else CourseListSerializer
 
+@extend_schema_view(
+    get=extend_schema(tags=['Courses'], summary='Детали курса'),
+    patch=extend_schema(tags=['Courses'], summary='Обновить курс'),
+    delete=extend_schema(tags=['Courses'], summary='Удалить курс'),
+)
 
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -51,6 +67,19 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CourseDetailSerializer
     lookup_field = 'id'
 
+    def perform_destroy(self, instance):
+        if instance.enrollments.exists():
+            raise ValidationError({
+                'detail': 'Нельзя удалить курс, на который уже записаны студенты. '
+                        'Переведите курс в статус archived вместо удаления.'
+            })
+        instance.delete()
+        
+
+@extend_schema_view(
+    get=extend_schema(tags=['Sections'], summary='Список разделов'),
+    post=extend_schema(tags=['Sections'], summary='Создать раздел'),
+)    
 
 class SectionListCreateView(generics.ListCreateAPIView):
     """
@@ -74,6 +103,10 @@ class SectionListCreateView(generics.ListCreateAPIView):
         self.check_object_permissions(self.request, course)
         serializer.save(course=course)
 
+@extend_schema_view(
+    patch=extend_schema(tags=['Sections'], summary='Обновить раздел'),
+    delete=extend_schema(tags=['Sections'], summary='Удалить раздел'),
+)
 
 class SectionDetailView(generics.RetrieveUpdateDestroyAPIView):
     """

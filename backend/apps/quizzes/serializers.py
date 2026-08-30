@@ -76,3 +76,24 @@ class QuizAttemptResultSerializer(serializers.ModelSerializer):
         model = QuizAttempt
         fields = ('id', 'quiz', 'score', 'passed', 'answers_snapshot', 'created_at')
         read_only_fields = fields
+        
+        
+class QuizCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = ('id', 'lesson', 'title', 'description', 'passing_score')
+        read_only_fields = ('lesson',)
+
+
+class QuestionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ('id', 'quiz', 'question', 'type', 'points', 'order', 'text_answer')
+        read_only_fields = ('quiz',)
+
+
+class AnswerCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = ('id', 'question', 'text', 'is_correct')
+        read_only_fields = ('question',)

@@ -10,7 +10,14 @@ from .permissions import IsQuizTeacherOwner
 from .serializers import (
     QuizAttemptResultSerializer, QuizPublicSerializer, QuizSerializer, SubmitQuizSerializer,
 )
+from apps.lessons.models import Lesson
+from apps.courses.permissions import IsTeacherOwnerOrReadOnly
+from .serializers import QuizCreateSerializer, QuestionCreateSerializer, AnswerCreateSerializer
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
+@extend_schema_view(
+    get=extend_schema(tags=['Quizzes'], summary='Детали теста'),
+)
 
 class QuizDetailView(generics.RetrieveAPIView):
     """
@@ -27,6 +34,9 @@ class QuizDetailView(generics.RetrieveAPIView):
         is_owner = user.is_admin_role or quiz.lesson.section.course.teacher == user
         return QuizSerializer if is_owner else QuizPublicSerializer
 
+@extend_schema_view(
+    post=extend_schema(tags=['Quizzes'], summary='Отправить ответы на тест'),
+)
 
 class SubmitQuizView(APIView):
     """
@@ -34,6 +44,13 @@ class SubmitQuizView(APIView):
     Автоматическая проверка ответов и сохранение попытки.
     """
     permission_classes = [permissions.IsAuthenticated]
+    
+    @extend_schema(
+        request=SubmitQuizSerializer,
+        responses={201: QuizAttemptResultSerializer},
+        summary='Отправить ответы на тест',
+        description='Автоматически проверяет ответы и возвращает результат прохождения.',
+    )
 
     @transaction.atomic
     def post(self, request, id):
@@ -109,3 +126,86 @@ class SubmitQuizView(APIView):
             return bool(expected_text) and submitted_text == expected_text
 
         return False
+    
+
+@extend_schema_view(
+    post=extend_schema(tags=['Quizzes'], summary='Создать тест'),
+)
+    
+class QuizCreateView(generics.CreateAPIView):
+    """POST /api/v1/lessons/{lesson_id}/quiz/ — преподаватель создаёт тест для урока"""
+    permission_classes = [permissions.IsAuthenticated, IsTeacherOwnerOrReadOnly]
+    serializer_class = QuizCreateSerializer
+
+    def perform_create(self, serializer):
+        lesson = generics.get_object_or_404(
+            Lesson.objects.select_related('section__course'), id=self.kwargs['lesson_id']
+        )
+        self.check_object_permissions(self.request, lesson)
+        serializer.save(lesson=lesson)
+
+@extend_schema_view(
+    post=extend_schema(tags=['Quizzes'], summary='Создать вопрос'),
+)
+
+class QuestionCreateView(generics.CreateAPIView):
+    """POST /api/v1/quizzes/{quiz_id}/questions/"""
+    permission_classes = [permissions.IsAuthenticated, IsQuizTeacherOwner]
+    serializer_class = QuestionCreateSerializer
+
+    def perform_create(self, serializer):
+        quiz = generics.get_object_or_404(
+            Quiz.objects.select_related('lesson__section__course'), id=self.kwargs['quiz_id']
+        )
+        self.check_object_permissions(self.request, quiz)
+        serializer.save(quiz=quiz)
+
+@extend_schema_view(
+    post=extend_schema(tags=['Quizzes'], summary='Создать вопрос'),
+)
+
+class AnswerCreateView(generics.CreateAPIView):
+    """POST /api/v1/questions/{question_id}/answers/"""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AnswerCreateSerializer
+
+    def perform_create(self, serializer):
+        question = generics.get_object_or_404(
+            Question.objects.select_related('quiz__lesson__section__course'),
+            id=self.kwargs['question_id'],
+        )
+        user = self.request.user
+        is_owner = user.is_admin_role or question.quiz.lesson.section.course.teacher == user
+        if not is_owner:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('Вы не являетесь владельцем этого теста')
+        serializer.save(question=question)
+
+@extend_schema_view(
+    post=extend_schema(tags=['Quizzes'], summary='Создать ответ'),
+)
+
+class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """PATCH/DELETE /api/v1/questions/{id}/"""
+    permission_classes = [permissions.IsAuthenticated, IsQuizTeacherOwner]
+    queryset = Question.objects.select_related('quiz__lesson__section__course')
+    serializer_class = QuestionCreateSerializer
+
+@extend_schema_view(
+    patch=extend_schema(tags=['Quizzes'], summary='Обновить вопрос'),
+    delete=extend_schema(tags=['Quizzes'], summary='Удалить вопрос'),
+)
+
+class AnswerDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """PATCH/DELETE /api/v1/answers/{id}/"""
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Answer.objects.select_related('question__quiz__lesson__section__course')
+    serializer_class = AnswerCreateSerializer
+
+    def check_object_permissions(self, request, obj):
+        super().check_object_permissions(request, obj)
+        user = request.user
+        is_owner = user.is_admin_role or obj.question.quiz.lesson.section.course.teacher == user
+        if not is_owner:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('Вы не являетесь владельцем этого теста')

@@ -116,6 +116,7 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'EXCEPTION_HANDLER': 'config.exceptions.custom_exception_handler',
 }
 
 # --- SimpleJWT ---
@@ -130,8 +131,16 @@ SIMPLE_JWT = {
 # --- drf-spectacular ---
 SPECTACULAR_SETTINGS = {
     'TITLE': 'LMS Platform API',
-    'DESCRIPTION': 'API для платформы онлайн-обучения программированию',
+    'DESCRIPTION': (
+        'REST API для платформы онлайн-обучения программированию. '
+        'Роли: student, teacher, admin. Авторизация: JWT (Bearer token).'
+    ),
     'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,  # не показывать сырой /api/schema/ как отдельный "endpoint" в списке
+    'SWAGGER_UI_SETTINGS': {
+        'persistAuthorization': True,  # чтобы Bearer-токен не сбрасывался при обновлении страницы
+    },
+    'COMPONENT_SPLIT_REQUEST': True,  # раздельные схемы для request/response тела
 }
 
 AUTH_USER_MODEL = 'users.User'

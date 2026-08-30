@@ -2,8 +2,12 @@ from rest_framework import generics, permissions
 
 from .models import Certificate
 from .serializers import CertificateSerializer
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 
+@extend_schema_view(
+    get=extend_schema(tags=['Certificates'], summary='Список сертификатов'),
+)
 class CertificateListView(generics.ListAPIView):
     """GET /api/v1/certificates/ — мои сертификаты"""
     permission_classes = [permissions.IsAuthenticated]
@@ -14,6 +18,9 @@ class CertificateListView(generics.ListAPIView):
             student=self.request.user
         ).select_related('course')
 
+@extend_schema_view(
+    get=extend_schema(tags=['Certificates'], summary='Сертификат по id'),
+)
 
 class CertificateDetailView(generics.RetrieveAPIView):
     """GET /api/v1/certificates/{id}/"""

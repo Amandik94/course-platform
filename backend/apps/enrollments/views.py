@@ -11,11 +11,24 @@ from .models import Enrollment, LessonProgress
 from .permissions import IsEnrollmentOwner
 from .serializers import EnrollmentSerializer, LessonProgressSerializer
 from apps.certificates.services import issue_certificate
+from drf_spectacular.utils import extend_schema
+from rest_framework import filters
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 
+@extend_schema_view(
+    post=extend_schema(tags=['Enrollments'], summary='Записаться на курс'),
+)
 class EnrollView(APIView):
     """POST /api/v1/courses/{id}/enroll/ — записаться на курс"""
     permission_classes = [permissions.IsAuthenticated]
+    
+    @extend_schema(
+        request=None,
+        responses={201: EnrollmentSerializer, 400: dict},
+        summary='Записаться на курс',
+        description='Доступно только студентам. Курс должен быть в статусе published.',
+    )
 
     def post(self, request, id):
         course = generics.get_object_or_404(Course, id=id, status=Course.Status.PUBLISHED)
@@ -29,11 +42,17 @@ class EnrollView(APIView):
         enrollment = Enrollment.objects.create(student=request.user, course=course)
         return Response(EnrollmentSerializer(enrollment).data, status=status.HTTP_201_CREATED)
 
+@extend_schema_view(
+    get=extend_schema(tags=['Enrollments'], summary='Мои курсы'),
+)
 
 class MyCoursesView(generics.ListAPIView):
     """GET /api/v1/my-courses/ — курсы, на которые записан текущий студент"""
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = EnrollmentSerializer
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['created_at', 'progress', 'completed_at']
+    ordering = ['-created_at']  # сортировка по умолчанию
 
     def get_queryset(self):
         return Enrollment.objects.filter(
@@ -41,6 +60,9 @@ class MyCoursesView(generics.ListAPIView):
         ).select_related('course', 'course__category', 'course__teacher')
 
 
+@extend_schema_view(
+    get=extend_schema(tags=['Enrollments'], summary='Прогресс по урокам'),
+)
 class ProgressListView(generics.ListAPIView):
     """GET /api/v1/progress/ — весь прогресс текущего студента по урокам"""
     permission_classes = [permissions.IsAuthenticated]
@@ -51,6 +73,9 @@ class ProgressListView(generics.ListAPIView):
             student=self.request.user
         ).select_related('lesson')
 
+@extend_schema_view(
+    post=extend_schema(tags=['Lessons'], summary='Завершить урок'),
+)
 
 class CompleteLessonView(APIView):
     """
@@ -59,6 +84,16 @@ class CompleteLessonView(APIView):
     и при 100% автоматически завершает Enrollment.
     """
     permission_classes = [permissions.IsAuthenticated]
+    
+    @extend_schema(
+        request=None,
+        responses={200: dict},
+        summary='Завершить урок',
+        description=(
+            'Отмечает урок пройденным, пересчитывает прогресс курса. '
+            'При достижении 100% автоматически завершает курс и выдаёт сертификат.'
+        ),
+    )
 
     @transaction.atomic
     def post(self, request, id):

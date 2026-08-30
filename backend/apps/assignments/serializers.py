@@ -48,3 +48,10 @@ class SubmissionReviewSerializer(serializers.ModelSerializer):
         if score is not None and max_score is not None and score > max_score:
             raise serializers.ValidationError({'score': f'Оценка не может превышать {max_score}'})
         return attrs
+    
+    
+class AssignmentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assignment
+        fields = ('id', 'lesson', 'title', 'description', 'starter_code', 'max_score', 'deadline')
+        read_only_fields = ('lesson',)

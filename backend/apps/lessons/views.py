@@ -4,8 +4,13 @@ from apps.courses.models import Section
 from apps.courses.permissions import IsTeacherOwnerOrReadOnly
 from .models import Lesson
 from .serializers import LessonSerializer
+from drf_spectacular.utils import extend_schema_view, extend_schema
 
 
+@extend_schema_view(
+    get=extend_schema(tags=['Lessons'], summary='Список уроков'),
+    post=extend_schema(tags=['Lessons'], summary='Создать урок'),
+)
 class LessonListCreateView(generics.ListCreateAPIView):
     """
     GET  /api/v1/sections/{section_id}/lessons/
@@ -27,6 +32,11 @@ class LessonListCreateView(generics.ListCreateAPIView):
         self.check_object_permissions(self.request, section)
         serializer.save(section=section)
 
+@extend_schema_view(
+    get=extend_schema(tags=['Lessons'], summary='Детали урока'),
+    patch=extend_schema(tags=['Lessons'], summary='Обновить урок'),
+    delete=extend_schema(tags=['Lessons'], summary='Удалить урок'),
+)
 
 class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
