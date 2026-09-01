@@ -1,0 +1,45 @@
+@import './reset.css';
+@import './variables.css';
+
+body {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+    background-color: var(--color-background);
+}
+
+h1 {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+}
+
+h2 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+/* Базовый контейнер для центрирования контента страниц */
+.container {
+    max-width: var(--container-max-width);
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
+}
+
+/* Утилита для скрытия элемента визуально, но не для screen reader'ов */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 var(--spacing-md);
+    }
+}
