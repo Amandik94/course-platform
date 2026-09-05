@@ -33,22 +33,32 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         source='category', queryset=Category.objects.all(), write_only=True
     )
     lessons_count = serializers.ReadOnlyField()
+    is_enrolled = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = (
             'id', 'title', 'slug', 'description', 'short_description',
             'cover', 'category', 'category_id', 'teacher', 'level',
-            'duration', 'status', 'lessons_count', 'created_at', 'updated_at',
+            'duration', 'status', 'lessons_count', 'is_enrolled',
+            'created_at', 'updated_at',
         )
         read_only_fields = ('slug', 'teacher')
 
+    def get_is_enrolled(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        if not request.user.is_student:
+            return False  # преподаватели/админы не записываются на курсы
+        # избегаем импорта apps.enrollments в начале файла, чтобы не
+        # создавать циклическую зависимость courses <-> enrollments
+        from apps.enrollments.models import Enrollment
+        return Enrollment.objects.filter(student=request.user, course=obj).exists()
+
     def create(self, validated_data):
-        # teacher = текущий пользователь, а не то, что прислали в запросе —
-        # иначе преподаватель мог бы создать курс от имени другого
         validated_data['teacher'] = self.context['request'].user
         return super().create(validated_data)
-
 
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:

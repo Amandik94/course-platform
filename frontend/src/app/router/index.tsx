@@ -7,13 +7,16 @@ import Home from '../../pages/Home/Home';
 import Login from '../../pages/Login/Login';
 import Register from '../../pages/Register/Register';
 import Profile from '../../pages/Profile/Profile';
+import Courses from '../../pages/Courses/Courses';
+import CourseDetail from '../../pages/CourseDetail/CourseDetail';
+import Learn from '../../pages/Learn/Learn';
 
 const Placeholder = ({ title }: { title: string }) => <div className="container"><h1>{title}</h1></div>;
 
 export const router = createBrowserRouter([
     { path: '/', element: <Home /> },
-    { path: '/courses', element: <Placeholder title="Каталог курсов" /> },
-    { path: '/courses/:id', element: <Placeholder title="Детали курса" /> },
+    { path: '/courses', element: <Courses /> },
+    { path: '/courses/:id', element: <CourseDetail /> },
     {
         path: '/login',
         element: (
@@ -50,7 +53,7 @@ export const router = createBrowserRouter([
         path: '/learn/:courseId/:lessonId',
         element: (
             <ProtectedRoute>
-                <Placeholder title="Обучение" />
+                <Learn />
             </ProtectedRoute>
         ),
     },

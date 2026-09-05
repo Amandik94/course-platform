@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { authService } from '../../services/authService';
+import { ToastProvider } from '../../components/Toast/ToastProvider';
 
 interface AppProvidersProps {
     children: ReactNode;
@@ -39,7 +40,7 @@ const AppProviders = ({ children }: AppProvidersProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return <>{children}</>;
+    return <ToastProvider>{children}</ToastProvider>;
 };
 
 export default AppProviders;

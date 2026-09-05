@@ -67,6 +67,7 @@ class ProgressListView(generics.ListAPIView):
     """GET /api/v1/progress/ — весь прогресс текущего студента по урокам"""
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = LessonProgressSerializer
+    pagination_class = None  # это "справочник" для построения UI, не постраничный список
 
     def get_queryset(self):
         return LessonProgress.objects.filter(

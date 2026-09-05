@@ -1,0 +1,91 @@
+.page {
+    padding: var(--spacing-xl) 0;
+}
+
+.header {
+    display: flex;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.cover {
+    width: 320px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+}
+
+.info {
+    flex: 1;
+}
+
+.badges {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.badge {
+    font-size: var(--font-size-xs);
+    padding: 2px var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-background);
+    color: var(--color-text-secondary);
+}
+
+.teacher {
+    color: var(--color-text-secondary);
+    margin: var(--spacing-sm) 0;
+}
+
+.actionRow {
+    margin-top: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.errorText {
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+}
+
+.sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.section {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.sectionTitle {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+}
+
+.lessonItem {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) 0;
+    border-top: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+}
+
+.lessonItem:first-child {
+    border-top: none;
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+    }
+    .cover {
+        width: 100%;
+    }
+}

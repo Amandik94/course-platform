@@ -1,0 +1,121 @@
+.page {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: calc(100vh - var(--navbar-height));
+}
+
+.sidebar {
+    background-color: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    overflow-y: auto;
+    padding: var(--spacing-md);
+}
+
+.sidebarHeader {
+    margin-bottom: var(--spacing-md);
+}
+
+.sidebarTitle {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+}
+
+.sectionBlock {
+    margin-bottom: var(--spacing-md);
+}
+
+.sectionTitle {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-xs);
+}
+
+.lessonLink {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+}
+
+.lessonLink:hover {
+    background-color: var(--color-background);
+}
+
+.lessonActive {
+    background-color: var(--color-background);
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.checkIcon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid var(--color-border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+}
+
+.checkCompleted {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: #ffffff;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-xl);
+    overflow-y: auto;
+}
+
+.lessonTitle {
+    margin-bottom: var(--spacing-md);
+}
+
+.videoWrapper {
+    aspect-ratio: 16 / 9;
+    background-color: #000;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+    max-width: 800px;
+}
+
+.textContent {
+    max-width: 800px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+.footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.navButtons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+@media (max-width: 768px) {
+    .page {
+        grid-template-columns: 1fr;
+    }
+    .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        max-height: 240px;
+    }
+}
