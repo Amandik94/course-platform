@@ -10,6 +10,8 @@ import Profile from '../../pages/Profile/Profile';
 import Courses from '../../pages/Courses/Courses';
 import CourseDetail from '../../pages/CourseDetail/CourseDetail';
 import Learn from '../../pages/Learn/Learn';
+import AssignmentPage from '../../pages/Assignments/Assignments';
+import QuizPage from '../../pages/Quizzes/Quizzes';
 
 const Placeholder = ({ title }: { title: string }) => <div className="container"><h1>{title}</h1></div>;
 
@@ -57,8 +59,8 @@ export const router = createBrowserRouter([
             </ProtectedRoute>
         ),
     },
-    { path: '/quiz/:id', element: <ProtectedRoute><Placeholder title="Тест" /></ProtectedRoute> },
-    { path: '/assignment/:id', element: <ProtectedRoute><Placeholder title="Задание" /></ProtectedRoute> },
+    { path: '/quiz/:id', element: <ProtectedRoute><QuizPage /></ProtectedRoute> },
+    { path: '/assignment/:id', element: <ProtectedRoute><AssignmentPage /></ProtectedRoute> },
     { path: '/certificates', element: <ProtectedRoute><Placeholder title="Сертификаты" /></ProtectedRoute> },
     {
         path: '/dashboard',

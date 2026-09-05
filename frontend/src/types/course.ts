@@ -72,6 +72,8 @@ export interface LessonDetail extends Lesson {
     description: string;
     content: string;
     video_url: string;
+    assignment_id: number | null;
+    quiz_id: number | null;
 }
 
 export interface CourseFilters {

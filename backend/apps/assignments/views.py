@@ -135,3 +135,26 @@ class AssignmentUpdateView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, IsAssignmentTeacherOwner]
     queryset = Assignment.objects.select_related('lesson__section__course')
     serializer_class = AssignmentCreateSerializer
+    
+    
+
+@extend_schema_view(
+    get=extend_schema(tags=['Assignments'], summary='Посмотреть своё решение задания'),
+)
+
+class MySubmissionView(generics.RetrieveAPIView):
+    """
+    GET /api/v1/assignments/{id}/my-submission/
+    Студент смотрит своё решение (если оно есть) по конкретному заданию.
+    Возвращает 404, если студент ещё не отправлял решение — это ожидаемо,
+    фронтенд трактует 404 здесь как "not_submitted", а не как ошибку.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AssignmentSubmissionSerializer
+
+    def get_object(self):
+        assignment = generics.get_object_or_404(Assignment, id=self.kwargs['id'])
+        submission = generics.get_object_or_404(
+            AssignmentSubmission, assignment=assignment, student=self.request.user
+        )
+        return submission

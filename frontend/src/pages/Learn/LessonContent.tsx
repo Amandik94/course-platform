@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import type { LessonDetail } from '../../types/course';
 import styles from './Learn.module.css';
@@ -42,13 +43,16 @@ const LessonContent = ({
 
             {lesson.content && <div className={styles.textContent}>{lesson.content}</div>}
 
-            {(lesson.type === 'assignment' || lesson.type === 'quiz') && (
-                <p>
-                    Этот урок содержит {lesson.type === 'assignment' ? 'практическое задание' : 'тест'}.
-                    Перейдите к его выполнению по кнопке ниже.
-                    {/* Реальная ссылка на /assignment/:id или /quiz/:id появится на Этапе 16,
-                        когда мы свяжем Lesson с конкретным Assignment/Quiz id через API */}
-                </p>
+            {lesson.type === 'assignment' && lesson.assignment_id && (
+                <Link to={`/assignment/${lesson.assignment_id}`}>
+                    <Button variant="secondary">Перейти к заданию →</Button>
+                </Link>
+            )}
+
+            {lesson.type === 'quiz' && lesson.quiz_id && (
+                <Link to={`/quiz/${lesson.quiz_id}`}>
+                    <Button variant="secondary">Перейти к тесту →</Button>
+                </Link>
             )}
 
             <div className={styles.footer}>
