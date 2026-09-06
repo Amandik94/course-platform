@@ -1,0 +1,26 @@
+.page {
+    padding: var(--spacing-xl) 0;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+}
+
+.section {
+    margin-top: var(--spacing-xl);
+}
+
+.tableRow {
+    display: flex;
+    justify-content: space-between;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+}
+
+@media (max-width: 768px) {
+    .statsGrid { grid-template-columns: repeat(2, 1fr); }
+}

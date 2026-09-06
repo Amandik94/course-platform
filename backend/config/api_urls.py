@@ -8,4 +8,5 @@ urlpatterns = [
     path('', include('apps.assignments.urls')),
     path('', include('apps.quizzes.urls')),
     path('', include('apps.certificates.urls')),
+    path('', include('apps.dashboard.urls')),
 ]
