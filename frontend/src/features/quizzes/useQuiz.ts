@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { quizService } from '../../services/quizService';
 import type { QuizAnswerDraft, QuizAttemptResult, QuizDetail } from '../../types/quiz';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 export function useQuiz(id: string | undefined) {
     const [quiz, setQuiz] = useState<QuizDetail | null>(null);
@@ -16,7 +17,7 @@ export function useQuiz(id: string | undefined) {
         quizService
             .getQuiz(id)
             .then(setQuiz)
-            .catch(() => setError('Не удалось загрузить тест.'))
+            .catch((err) => setError(getApiErrorMessage(err)))
             .finally(() => setIsLoading(false));
     }, [id]);
 
@@ -27,8 +28,8 @@ export function useQuiz(id: string | undefined) {
         try {
             const data = await quizService.submit(id, answers);
             setResult(data);
-        } catch {
-            setSubmitError('Не удалось отправить ответы. Попробуйте снова.');
+        } catch (err) {
+            setSubmitError(getApiErrorMessage(err));
         } finally {
             setIsSubmitting(false);
         }

@@ -8,6 +8,7 @@ import TeacherDashboardView from './TeacherDashboardView';
 import AdminDashboardView from './AdminDashboardView';
 import type { AdminDashboard, StudentDashboard, TeacherDashboard } from '../../types/dashboard';
 import styles from './Dashboard.module.css';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 type DashboardData =
     | { role: 'student'; data: StudentDashboard }
@@ -37,8 +38,8 @@ const Dashboard = () => {
                     const data = await dashboardService.getAdminDashboard();
                     setDashboard({ role: 'admin', data });
                 }
-            } catch {
-                setError('Не удалось загрузить дашборд.');
+            } catch (err) {
+                setError(getApiErrorMessage(err));
             } finally {
                 setIsLoading(false);
             }
@@ -48,7 +49,7 @@ const Dashboard = () => {
     }, [user]);
 
     if (isLoading) return <Loader text="Загрузка дашборда..." />;
-    if (error || !dashboard) return <EmptyState title="Ошибка" description={error ?? undefined} />;
+    if (error || !dashboard) return <EmptyState variant="error" title="Ошибка" description={error ?? undefined} />;
 
     return (
         <div className={`${styles.page} container`}>

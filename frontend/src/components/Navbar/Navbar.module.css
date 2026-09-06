@@ -43,6 +43,12 @@
     font-weight: 600;
 }
 
+@media (max-width: 480px) {
+    .links {
+        display: none;
+    }
+}
+
 @media (max-width: 640px) {
     .links {
         gap: var(--spacing-sm);

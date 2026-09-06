@@ -24,6 +24,7 @@
     display: flex;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-sm);
+    flex-wrap: wrap; /* добавлено — иначе бейджи вылезают за экран на mobile */
 }
 
 .badge {

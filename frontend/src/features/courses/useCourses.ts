@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { courseService } from '../../services/courseService';
 import type { CourseFilters, CourseListItem } from '../../types/course';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 interface UseCoursesResult {
     courses: CourseListItem[];
@@ -30,9 +31,9 @@ export function useCourses(filters: CourseFilters): UseCoursesResult {
                     setCourses(data.results);
                     setCount(data.count);
                 }
-            } catch {
+            } catch (err) {
                 if (!isCancelled) {
-                    setError('Не удалось загрузить курсы. Попробуйте позже.');
+                    setError(getApiErrorMessage(err));
                 }
             } finally {
                 if (!isCancelled) {

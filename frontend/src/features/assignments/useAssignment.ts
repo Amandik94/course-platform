@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { assignmentService } from '../../services/assignmentService';
 import type { AssignmentDetail, AssignmentSubmission } from '../../types/assignment';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 export function useAssignment(id: string | undefined) {
     const [assignment, setAssignment] = useState<AssignmentDetail | null>(null);
@@ -19,7 +20,7 @@ export function useAssignment(id: string | undefined) {
                 setAssignment(assignmentData);
                 setSubmission(submissionData);
             })
-            .catch(() => setError('Не удалось загрузить задание.'))
+            .catch((err) => setError(getApiErrorMessage(err)))
             .finally(() => setIsLoading(false));
     };
 
@@ -32,8 +33,8 @@ export function useAssignment(id: string | undefined) {
         try {
             const result = await assignmentService.submit(id, code);
             setSubmission(result);
-        } catch {
-            setSubmitError('Не удалось отправить решение. Попробуйте снова.');
+        } catch (err) {
+            setSubmitError(getApiErrorMessage(err));
         } finally {
             setIsSubmitting(false);
         }

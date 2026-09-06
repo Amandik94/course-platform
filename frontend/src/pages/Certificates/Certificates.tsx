@@ -5,6 +5,7 @@ import EmptyState from '../../components/EmptyState/EmptyState';
 import { certificateService } from '../../services/certificateService';
 import type { Certificate } from '../../types/certificate';
 import styles from './Certificates.module.css';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 const Certificates = () => {
     const [certificates, setCertificates] = useState<Certificate[]>([]);
@@ -15,15 +16,16 @@ const Certificates = () => {
         certificateService
             .getCertificates()
             .then(setCertificates)
-            .catch(() => setError('Не удалось загрузить сертификаты.'))
+            .catch((err) => setError(getApiErrorMessage(err)))
             .finally(() => setIsLoading(false));
     }, []);
 
     if (isLoading) return <Loader text="Загрузка сертификатов..." />;
-    if (error) return <EmptyState title="Ошибка" description={error} />;
+    if (error) return <EmptyState variant="error" title="Ошибка" description={error} />;
     if (certificates.length === 0) {
         return (
             <EmptyState
+                variant="empty"
                 title="У вас пока нет сертификатов"
                 description="Завершите курс полностью, чтобы получить сертификат"
             />

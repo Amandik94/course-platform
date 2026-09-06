@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Button from '../../components/Button/Button';
 import Loader from '../../components/Loader/Loader';
@@ -6,14 +6,23 @@ import EmptyState from '../../components/EmptyState/EmptyState';
 import { useQuiz } from '../../features/quizzes/useQuiz';
 import type { QuizAnswerDraft } from '../../types/quiz';
 import styles from './Quizzes.module.css';
+import { useToast } from '../../components/Toast/ToastProvider';
+
 
 const QuizPage = () => {
     const { id } = useParams<{ id: string }>();
     const { quiz, isLoading, error, result, submitAnswers, isSubmitting, submitError } = useQuiz(id);
+    const { showToast } = useToast();
 
     // draft хранится как словарь question_id -> частичный ответ,
     // чтобы удобно обновлять по одному вопросу за раз
     const [draft, setDraft] = useState<Record<number, QuizAnswerDraft>>({});
+
+    useEffect(() => {
+        if (submitError) {
+            showToast(submitError, 'error');
+        }
+    }, [submitError, showToast]);
 
     if (isLoading) return <Loader text="Загрузка теста..." />;
     if (error || !quiz) return <EmptyState title="Тест не найден" description={error ?? undefined} />;

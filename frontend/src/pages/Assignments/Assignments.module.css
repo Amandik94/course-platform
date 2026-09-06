@@ -69,3 +69,16 @@
     font-size: var(--font-size-sm);
     margin-bottom: var(--spacing-sm);
 }
+
+
+@media (max-width: 640px) {
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    .codeArea {
+        min-height: 200px; /* на мобильном меньше высоты по умолчанию, юзер может resize */
+        font-size: 13px;
+    }
+}

@@ -30,10 +30,7 @@ export const router = createBrowserRouter([
             { path: 'register', element: <PublicRoute><Register /></PublicRoute> },
             { path: 'profile', element: <ProtectedRoute><Profile /></ProtectedRoute> },
             { path: 'my-courses', element: <ProtectedRoute><MyCourses /></ProtectedRoute> },
-            {
-                path: 'learn/:courseId/:lessonId',
-                element: <ProtectedRoute><Learn /></ProtectedRoute>,
-            },
+            { path: 'learn/:courseId/:lessonId',element: <ProtectedRoute><Learn /></ProtectedRoute>,},
             { path: 'quiz/:id', element: <ProtectedRoute><QuizPage /></ProtectedRoute> },
             { path: 'assignment/:id', element: <ProtectedRoute><AssignmentPage /></ProtectedRoute> },
             { path: 'certificates', element: <ProtectedRoute><Certificates /></ProtectedRoute> },

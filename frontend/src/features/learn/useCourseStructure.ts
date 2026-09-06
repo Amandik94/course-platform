@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { courseService } from '../../services/courseService';
 import { progressService } from '../../services/progressService';
 import type { Lesson, Section } from '../../types/course';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 interface SectionWithLessons extends Section {
     lessons: Lesson[];
@@ -50,8 +51,8 @@ export function useCourseStructure(courseId: string | undefined): UseCourseStruc
                     setSections(sectionsWithLessons);
                     setCompletedLessonIds(completedIds);
                 }
-            } catch {
-                if (!isCancelled) setError('Не удалось загрузить структуру курса.');
+            } catch (err) {
+                if (!isCancelled) setError(getApiErrorMessage(err));
             } finally {
                 if (!isCancelled) setIsLoading(false);
             }

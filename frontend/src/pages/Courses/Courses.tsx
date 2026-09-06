@@ -108,10 +108,10 @@ const Courses = () => {
                 </div>
             )}
 
-            {!isLoading && error && <EmptyState title="Ошибка загрузки" description={error} />}
+            {!isLoading && error && <EmptyState variant="error" title="Ошибка загрузки" description={error} />}
 
             {!isLoading && !error && courses.length === 0 && (
-                <EmptyState title="Курсы не найдены" description="Попробуйте изменить параметры поиска" />
+                <EmptyState variant="empty" title="Курсы не найдены" description="Попробуйте изменить параметры поиска" />
             )}
 
             {!isLoading && !error && courses.length > 0 && (

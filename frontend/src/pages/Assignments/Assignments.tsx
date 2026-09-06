@@ -25,11 +25,20 @@ const AssignmentPage = () => {
         }
     }, [assignment, submission]);
 
+
+    useEffect(() => {
+        if (submitError) {
+            showToast(submitError, 'error');
+        }
+    }, [submitError, showToast]);
+
+
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
         await submitSolution(code);
         showToast('Решение отправлено на проверку', 'success');
     };
+
 
     if (isLoading) return <Loader text="Загрузка задания..." />;
     if (error || !assignment) return <EmptyState title="Задание не найдено" description={error ?? undefined} />;

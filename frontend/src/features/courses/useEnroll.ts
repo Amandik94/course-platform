@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { isAxiosError } from 'axios';
 import { courseService } from '../../services/courseService';
 import type { ApiError } from '../../types/common';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 export function useEnroll() {
     const [isEnrolling, setIsEnrolling] = useState(false);
@@ -17,7 +18,7 @@ export function useEnroll() {
             if (isAxiosError<ApiError>(err) && typeof err.response?.data.detail === 'string') {
                 setError(err.response.data.detail);
             } else {
-                setError('Не удалось записаться на курс.');
+                setError(getApiErrorMessage(err));
             }
         } finally {
             setIsEnrolling(false);

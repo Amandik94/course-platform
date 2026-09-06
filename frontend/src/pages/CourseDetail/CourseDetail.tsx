@@ -8,6 +8,8 @@ import { useEnroll } from '../../features/courses/useEnroll';
 import { useAuthStore } from '../../store/authStore';
 import type { CourseDetail as CourseDetailType, Section } from '../../types/course';
 import styles from './CourseDetail.module.css';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
+import { useToast } from '../../components/Toast/ToastProvider';
 
 const LEVEL_LABELS: Record<string, string> = {
     beginner: 'Начинающий', junior: 'Junior', middle: 'Middle', advanced: 'Advanced',
@@ -18,6 +20,7 @@ const CourseDetail = () => {
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
     const { enroll, isEnrolling, error: enrollError } = useEnroll();
+    const { showToast } = useToast();
 
     const [course, setCourse] = useState<CourseDetailType | null>(null);
     const [sections, setSections] = useState<Section[]>([]);
@@ -34,9 +37,15 @@ const CourseDetail = () => {
                 setCourse(courseData);
                 setSections(sectionsData);
             })
-            .catch(() => setLoadError('Не удалось загрузить курс. Возможно, он не существует.'))
+            .catch((err) => setLoadError(getApiErrorMessage(err)))
             .finally(() => setIsLoading(false));
     }, [id]);
+
+        useEffect(() => {
+        if (enrollError) {
+            showToast(enrollError, 'error');
+        }
+    }, [enrollError, showToast]);
 
     const handleEnroll = () => {
         if (!isAuthenticated) {
@@ -48,11 +57,12 @@ const CourseDetail = () => {
             // оптимистично обновляем локальное состояние курса,
             // не делая повторный запрос ради одного изменившегося поля
             setCourse((prev) => (prev ? { ...prev, is_enrolled: true } : prev));
+            showToast('Вы успешно записались на курс!', 'success');
         });
     };
 
     if (isLoading) return <Loader text="Загрузка курса..." />;
-    if (loadError || !course) return <EmptyState title="Курс не найден" description={loadError ?? undefined} />;
+    if (loadError || !course) return <EmptyState variant="error" title="Курс не найден" description={loadError ?? undefined} />;
 
     return (
         <div className={`${styles.page} container`}>

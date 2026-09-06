@@ -80,8 +80,8 @@ const Learn = () => {
     };
 
     if (isLoading || isLessonLoading) return <Loader text="Загрузка курса..." />;
-    if (error) return <EmptyState title="Ошибка" description={error} />;
-    if (!currentLesson) return <EmptyState title="Урок не найден" />;
+    if (error) return <EmptyState variant="error" title="Ошибка" description={error} />;
+    if (!currentLesson) return <EmptyState variant="empty" title="Урок не найден" />;
     if (!courseId) return null;
 
     return (

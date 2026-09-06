@@ -102,11 +102,19 @@
     align-items: center;
     padding-top: var(--spacing-lg);
     border-top: 1px solid var(--color-border);
+    flex-wrap: wrap;   /* добавлено */
+    gap: var(--spacing-md); /* добавлено — чтобы кнопки не слипались при переносе */
 }
 
 .navButtons {
     display: flex;
     gap: var(--spacing-sm);
+}
+
+@media (max-width: 480px) {
+    .content {
+        padding: var(--spacing-md); /* меньше отступы на очень узких экранах */
+    }
 }
 
 @media (max-width: 768px) {

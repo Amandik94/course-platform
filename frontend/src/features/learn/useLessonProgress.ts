@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { progressService } from '../../services/progressService';
 import type { CompleteLessonResponse } from '../../types/progress';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 export function useLessonProgress() {
     const [isCompleting, setIsCompleting] = useState(false);
@@ -15,8 +16,8 @@ export function useLessonProgress() {
         try {
             const result = await progressService.completeLesson(lessonId);
             onSuccess?.(result);
-        } catch {
-            setError('Не удалось отметить урок пройденным. Попробуйте снова.');
+        } catch (err) {
+            setError(getApiErrorMessage(err));
         } finally {
             setIsCompleting(false);
         }

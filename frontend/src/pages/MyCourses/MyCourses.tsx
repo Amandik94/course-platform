@@ -7,6 +7,7 @@ import EmptyState from '../../components/EmptyState/EmptyState';
 import { enrollmentService } from '../../services/enrollmentService';
 import type { Enrollment } from '../../types/enrollment';
 import styles from './MyCourses.module.css';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 const MyCourses = () => {
     const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -17,15 +18,16 @@ const MyCourses = () => {
         enrollmentService
             .getMyCourses()
             .then((data) => setEnrollments(data.results))
-            .catch(() => setError('Не удалось загрузить ваши курсы.'))
+            .catch((err) => setError(getApiErrorMessage(err)))
             .finally(() => setIsLoading(false));
     }, []);
 
     if (isLoading) return <Loader text="Загрузка курсов..." />;
-    if (error) return <EmptyState title="Ошибка" description={error} />;
+    if (error) return <EmptyState variant="error" title="Ошибка" description={error} />;
     if (enrollments.length === 0) {
         return (
             <EmptyState
+                variant="empty"
                 title="У вас пока нет курсов"
                 description="Загляните в каталог, чтобы найти что-нибудь интересное"
             />

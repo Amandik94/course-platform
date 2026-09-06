@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { authService } from '../../services/authService';
+import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 import Button from '../../components/Button/Button';
 import Input from '../../components/Input/Input';
 import styles from './Profile.module.css';
@@ -11,8 +12,9 @@ const Profile = () => {
     const [lastName, setLastName] = useState(user?.last_name ?? '');
     const [isLoading, setIsLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    if (!user) return null; // страница защищена ProtectedRoute, но TypeScript этого не знает
+    if (!user) return null;
 
     const initials = `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase();
 
@@ -20,10 +22,13 @@ const Profile = () => {
         event.preventDefault();
         setIsLoading(true);
         setSuccessMessage(null);
+        setErrorMessage(null);
         try {
             const updated = await authService.updateMe({ first_name: firstName, last_name: lastName });
             setUser(updated);
             setSuccessMessage('Профиль обновлён');
+        } catch (err) {
+            setErrorMessage(getApiErrorMessage(err));
         } finally {
             setIsLoading(false);
         }
@@ -44,6 +49,7 @@ const Profile = () => {
 
                 <form className={styles.form} onSubmit={handleSubmit}>
                     {successMessage && <div className={styles.successBanner}>{successMessage}</div>}
+                    {errorMessage && <div className={styles.errorBanner}>{errorMessage}</div>}
 
                     <Input label="Email" value={user.email} disabled />
                     <Input
