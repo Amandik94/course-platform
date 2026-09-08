@@ -1,35 +1,66 @@
 import { useEffect, useState } from 'react';
 import { assignmentService } from '../../services/assignmentService';
-import type { AssignmentDetail, AssignmentSubmission } from '../../types/assignment';
+import type {
+    AssignmentDetail,
+    AssignmentSubmission,
+} from '../../types/assignment';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 
 export function useAssignment(id: string | undefined) {
-    const [assignment, setAssignment] = useState<AssignmentDetail | null>(null);
-    const [submission, setSubmission] = useState<AssignmentSubmission | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [assignment, setAssignment] =
+        useState<AssignmentDetail | null>(null);
+
+    const [submission, setSubmission] =
+        useState<AssignmentSubmission | null>(null);
+
+    const [loadedId, setLoadedId] = useState<string | undefined>();
+
     const [error, setError] = useState<string | null>(null);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
-    const loadData = () => {
+    useEffect(() => {
         if (!id) return;
-        setIsLoading(true);
-        setError(null);
-        Promise.all([assignmentService.getAssignment(id), assignmentService.getMySubmission(id)])
-            .then(([assignmentData, submissionData]) => {
+
+        let cancelled = false;
+
+        const loadData = async () => {
+            try {
+                const [assignmentData, submissionData] = await Promise.all([
+                    assignmentService.getAssignment(id),
+                    assignmentService.getMySubmission(id),
+                ]);
+
+                if (cancelled) return;
+
                 setAssignment(assignmentData);
                 setSubmission(submissionData);
-            })
-            .catch((err) => setError(getApiErrorMessage(err)))
-            .finally(() => setIsLoading(false));
-    };
+                setError(null);
+                setLoadedId(id);
+            } catch (err) {
+                if (cancelled) return;
 
-    useEffect(loadData, [id]);
+                setError(getApiErrorMessage(err));
+                setLoadedId(id);
+            }
+        };
+
+        loadData();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [id]);
+
+    const isLoading = Boolean(id && loadedId !== id);
 
     const submitSolution = async (code: string) => {
         if (!id) return;
+
         setIsSubmitting(true);
         setSubmitError(null);
+
         try {
             const result = await assignmentService.submit(id, code);
             setSubmission(result);
@@ -40,5 +71,13 @@ export function useAssignment(id: string | undefined) {
         }
     };
 
-    return { assignment, submission, isLoading, error, submitSolution, isSubmitting, submitError };
+    return {
+        assignment,
+        submission,
+        isLoading,
+        error,
+        submitSolution,
+        isSubmitting,
+        submitError,
+    };
 }

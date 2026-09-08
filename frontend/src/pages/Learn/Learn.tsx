@@ -6,7 +6,7 @@ import { useCourseStructure } from '../../features/learn/useCourseStructure';
 import { useLessonProgress } from '../../features/learn/useLessonProgress';
 import { courseService } from '../../services/courseService';
 import { enrollmentService } from '../../services/enrollmentService';
-import { useToast } from '../../components/Toast/ToastProvider';
+import { useToast } from '../../components/Toast/useToast';
 import type { LessonDetail } from '../../types/course';
 import LessonSidebar from './LessonSidebar';
 import LessonContent from './LessonContent';
@@ -21,8 +21,12 @@ const Learn = () => {
         useCourseStructure(courseId);
     const { completeLesson, isCompleting } = useLessonProgress();
 
-    const [currentLesson, setCurrentLesson] = useState<LessonDetail | null>(null);
-    const [isLessonLoading, setIsLessonLoading] = useState(true);
+    const [currentLesson, setCurrentLesson] =
+    useState<LessonDetail | null>(null);
+
+    const [loadedLessonId, setLoadedLessonId] =
+    useState<string | undefined>();
+
     const [progressPercent, setProgressPercent] = useState(0);
 
     // Плоский список всех уроков курса в правильном порядке —
@@ -51,14 +55,35 @@ const Learn = () => {
 
 
     useEffect(() => {
-        if (!lessonId) return;
-        setIsLessonLoading(true);
-        courseService
-            .getLessonById(lessonId)
-            .then(setCurrentLesson)
-            .catch(() => setCurrentLesson(null))
-            .finally(() => setIsLessonLoading(false));
-    }, [lessonId]);
+    if (!lessonId) return;
+
+    let cancelled = false;
+
+    const loadLesson = async () => {
+        try {
+            const lesson = await courseService.getLessonById(lessonId);
+
+            if (cancelled) return;
+
+            setCurrentLesson(lesson);
+            setLoadedLessonId(lessonId);
+        } catch {
+            if (cancelled) return;
+
+            setCurrentLesson(null);
+            setLoadedLessonId(lessonId);
+        }
+    };
+
+    loadLesson();
+
+    return () => {
+        cancelled = true;
+    };
+}, [lessonId]);
+
+    const isLessonLoading =
+    Boolean(lessonId && loadedLessonId !== lessonId);
 
     const handleComplete = () => {
         if (!currentLesson) return;

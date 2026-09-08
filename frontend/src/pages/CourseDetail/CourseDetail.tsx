@@ -9,7 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import type { CourseDetail as CourseDetailType, Section } from '../../types/course';
 import styles from './CourseDetail.module.css';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
-import { useToast } from '../../components/Toast/ToastProvider';
+import { useToast } from '../../components/Toast/useToast';
 
 const LEVEL_LABELS: Record<string, string> = {
     beginner: 'Начинающий', junior: 'Junior', middle: 'Middle', advanced: 'Advanced',
@@ -24,22 +24,43 @@ const CourseDetail = () => {
 
     const [course, setCourse] = useState<CourseDetailType | null>(null);
     const [sections, setSections] = useState<Section[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [loadedId, setLoadedId] = useState<string | undefined>();
     const [loadError, setLoadError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!id) return;
-        setIsLoading(true);
-        setLoadError(null);
+    if (!id) return;
 
-        Promise.all([courseService.getCourseById(id), courseService.getCourseSections(id)])
-            .then(([courseData, sectionsData]) => {
-                setCourse(courseData);
-                setSections(sectionsData);
-            })
-            .catch((err) => setLoadError(getApiErrorMessage(err)))
-            .finally(() => setIsLoading(false));
-    }, [id]);
+    let cancelled = false;
+
+    const loadCourse = async () => {
+        try {
+            const [courseData, sectionsData] = await Promise.all([
+                courseService.getCourseById(id),
+                courseService.getCourseSections(id),
+            ]);
+
+            if (cancelled) return;
+
+            setCourse(courseData);
+            setSections(sectionsData);
+            setLoadError(null);
+            setLoadedId(id);
+        } catch (err) {
+            if (cancelled) return;
+
+            setLoadError(getApiErrorMessage(err));
+            setLoadedId(id);
+        }
+    };
+
+    loadCourse();
+
+    return () => {
+        cancelled = true;
+    };
+}, [id]);
+
+    const isLoading = Boolean(id && loadedId !== id);
 
         useEffect(() => {
         if (enrollError) {

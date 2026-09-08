@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     # сторонние библиотеки
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     'drf_spectacular',
@@ -36,7 +37,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',   # должен идти как можно выше
+    'corsheaders.middleware.CorsMiddleware',  # Идет строго после SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -93,10 +94,10 @@ USE_I18N = True
 USE_TZ = True
 
 # --- Статика и медиа ---
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -137,11 +138,11 @@ SPECTACULAR_SETTINGS = {
         'Роли: student, teacher, admin. Авторизация: JWT (Bearer token).'
     ),
     'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,  # не показывать сырой /api/schema/ как отдельный "endpoint" в списке
+    'SERVE_INCLUDE_SCHEMA': False,
     'SWAGGER_UI_SETTINGS': {
-        'persistAuthorization': True,  # чтобы Bearer-токен не сбрасывался при обновлении страницы
+        'persistAuthorization': True,
     },
-    'COMPONENT_SPLIT_REQUEST': True,  # раздельные схемы для request/response тела
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 AUTH_USER_MODEL = 'users.User'

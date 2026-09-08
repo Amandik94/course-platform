@@ -5,7 +5,7 @@ import Loader from '../../components/Loader/Loader';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import StatusBadge from '../../components/StatusBadge/StatusBadge';
 import { useAssignment } from '../../features/assignments/useAssignment';
-import { useToast } from '../../components/Toast/ToastProvider';
+import { useToast } from '../../components/Toast/useToast';
 import styles from './Assignments.module.css';
 
 const AssignmentPage = () => {
@@ -13,17 +13,10 @@ const AssignmentPage = () => {
     const { assignment, submission, isLoading, error, submitSolution, isSubmitting, submitError } =
         useAssignment(id);
     const { showToast } = useToast();
-    const [code, setCode] = useState('');
+    const [code, setCode] = useState<string | null>(null);
 
-    // при первой загрузке подставляем starter_code, либо код уже
-    // отправленного решения (если студент возвращается доработать)
-    useEffect(() => {
-        if (submission) {
-            setCode(submission.code);
-        } else if (assignment) {
-            setCode(assignment.starter_code);
-        }
-    }, [assignment, submission]);
+    const displayedCode =
+        code ?? submission?.code ?? assignment?.starter_code ?? '';
 
 
     useEffect(() => {
@@ -35,7 +28,7 @@ const AssignmentPage = () => {
 
     const handleSubmit = async (event: FormEvent) => {
         event.preventDefault();
-        await submitSolution(code);
+        await submitSolution(displayedCode);
         showToast('Решение отправлено на проверку', 'success');
     };
 
@@ -64,7 +57,7 @@ const AssignmentPage = () => {
 
                 <textarea
                     className={styles.codeArea}
-                    value={code}
+                    value={displayedCode}
                     onChange={(e) => setCode(e.target.value)}
                     spellCheck={false}
                     disabled={!isEditable}

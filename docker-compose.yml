@@ -9,14 +9,15 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 10s
+    # порт наружу больше не пробрасываем — доступ к БД теперь только
+    # изнутри Docker-сети (backend), это более безопасная конфигурация
+    # для той конфигурации, что приближена к production
 
   backend:
     build:
@@ -27,29 +28,49 @@ services:
     env_file:
       - .env
     environment:
-      DB_HOST: postgres  # имя сервиса становится DNS-именем внутри сети Docker Compose
-      DJANGO_SETTINGS_MODULE: config.settings.production
+      DB_HOST: postgres
+      DJANGO_SETTINGS_MODULE: config.settings.development
     volumes:
       - media_data:/app/media
       - static_data:/app/staticfiles
-    ports:
-      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+    # порт 8000 больше не пробрасываем наружу — весь внешний трафик
+    # идёт исключительно через nginx (порт 80), backend доступен
+    # только внутри Docker-сети по имени "backend"
 
-  frontend:
+  frontend-build:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: lms_frontend
+    container_name: lms_frontend_build
+    volumes:
+      - frontend_dist:/dist_output
+    # копируем собранную статику в shared volume и сразу завершаемся —
+    # это не долгоживущий сервис, а одноразовая задача сборки
+    command: sh -c "cp -r /dist/* /dist_output/"
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: lms_nginx
     restart: unless-stopped
     ports:
-      - "5173:5173"
+      - "80:80"
+    volumes:
+      - frontend_dist:/usr/share/nginx/html:ro
+      - static_data:/app/staticfiles:ro
+      - media_data:/app/media:ro
     depends_on:
-      - backend
+      backend:
+        condition: service_started
+      frontend-build:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:
   media_data:
   static_data:
+  frontend_dist:

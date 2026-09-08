@@ -1,6 +1,7 @@
 import { api } from './api';
 import type { AssignmentDetail, AssignmentSubmission } from '../types/assignment';
 
+
 export const assignmentService = {
     getAssignment: (id: number | string) =>
         api.get<AssignmentDetail>(`assignments/${id}/`).then((res) => res.data),
@@ -10,7 +11,7 @@ export const assignmentService = {
         try {
             const res = await api.get<AssignmentSubmission>(`assignments/${id}/my-submission/`);
             return res.data;
-        } catch (err) {
+        } catch {
             return null;
         }
     },

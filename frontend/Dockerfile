@@ -1,25 +1,16 @@
-# --- Этап 1: сборка статики ---
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Аналогично backend — сначала зависимости, потом код,
-# для эффективного кэширования слоёв
 COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
 RUN npm run build
 
-# --- Этап 2: раздача собранной статики ---
-FROM node:20-alpine AS serve
-
-WORKDIR /app
-
-RUN npm install -g serve
-
-COPY --from=build /app/dist ./dist
-
-EXPOSE 5173
-
-CMD ["serve", "-s", "dist", "-l", "5173"]
+# Финальный этап — не запускающийся сервис, просто контейнер,
+# из которого docker compose скопирует dist/ в shared volume.
+# Используем минимальный alpine, команда ничего не делает — 
+# существование контейнера не нужно после копирования файла.
+FROM alpine:3.20
+COPY --from=build /app/dist /dist

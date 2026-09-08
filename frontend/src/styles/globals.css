@@ -22,7 +22,7 @@ h2 {
 .container {
     max-width: var(--container-max-width);
     margin: 0 auto;
-    padding: 0 var(--spacing-lg);
+    padding: 24px var(--spacing-lg);
 }
 
 /* Утилита для скрытия элемента визуально, но не для screen reader'ов */

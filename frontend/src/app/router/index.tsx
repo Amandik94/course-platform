@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../layout/Layout';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
+import NotFound from './NotFound';
 
 import Home from '../../pages/Home/Home';
 import Login from '../../pages/Login/Login';
@@ -16,8 +17,6 @@ import MyCourses from '../../pages/MyCourses/MyCourses';
 import Dashboard from '../../pages/Dashboard/Dashboard';
 import Certificates from '../../pages/Certificates/Certificates';
 
-const NotFound = () => <div className="container"><h1>404 — Страница не найдена</h1></div>;
-
 export const router = createBrowserRouter([
     {
         path: '/',
@@ -30,7 +29,10 @@ export const router = createBrowserRouter([
             { path: 'register', element: <PublicRoute><Register /></PublicRoute> },
             { path: 'profile', element: <ProtectedRoute><Profile /></ProtectedRoute> },
             { path: 'my-courses', element: <ProtectedRoute><MyCourses /></ProtectedRoute> },
-            { path: 'learn/:courseId/:lessonId',element: <ProtectedRoute><Learn /></ProtectedRoute>,},
+            {
+                path: 'learn/:courseId/:lessonId',
+                element: <ProtectedRoute><Learn /></ProtectedRoute>,
+            },
             { path: 'quiz/:id', element: <ProtectedRoute><QuizPage /></ProtectedRoute> },
             { path: 'assignment/:id', element: <ProtectedRoute><AssignmentPage /></ProtectedRoute> },
             { path: 'certificates', element: <ProtectedRoute><Certificates /></ProtectedRoute> },

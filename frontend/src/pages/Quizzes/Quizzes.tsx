@@ -6,7 +6,7 @@ import EmptyState from '../../components/EmptyState/EmptyState';
 import { useQuiz } from '../../features/quizzes/useQuiz';
 import type { QuizAnswerDraft } from '../../types/quiz';
 import styles from './Quizzes.module.css';
-import { useToast } from '../../components/Toast/ToastProvider';
+import { useToast } from '../../components/Toast/useToast';
 
 
 const QuizPage = () => {
