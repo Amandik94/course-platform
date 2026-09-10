@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .serializers import AuthResponseSerializer, LoginSerializer, RegisterSerializer, UserSerializer
 
 
 
@@ -42,7 +42,7 @@ class LoginView(APIView):
     
     @extend_schema(
         request=LoginSerializer,
-        responses={200: UserSerializer},
+        responses={200: AuthResponseSerializer},
         summary='Вход по email и паролю',
         description='Возвращает access и refresh токены при успешной авторизации.',
     )

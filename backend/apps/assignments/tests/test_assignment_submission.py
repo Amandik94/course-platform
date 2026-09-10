@@ -28,6 +28,18 @@ class TestAssignmentSubmission:
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data['status'] == 'pending'
 
+    def test_student_without_enrollment_cannot_read_assignment_detail(
+        self, api_client, assignment_fixture, django_user_model,
+    ):
+        stranger = django_user_model.objects.create_user(
+            email='stranger@test.com', password='pass12345', role='student',
+        )
+        api_client.force_authenticate(user=stranger)
+
+        response = api_client.get(reverse('assignment-detail', kwargs={'id': assignment_fixture.id}))
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
     def test_resubmit_updates_existing_not_duplicates(self, student_client, assignment_fixture, student_user):
         student_client.post(
             reverse('assignment-submit', kwargs={'id': assignment_fixture.id}), {'code': 'v1'}

@@ -10,12 +10,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'password', 'password_confirm', 'first_name', 'last_name', 'role')
-        extra_kwargs = {
-            'role': {'required': False},
-        }
+        fields = ('email', 'password', 'password_confirm', 'first_name', 'last_name')
 
     def validate(self, attrs):
+        if 'role' in self.initial_data:
+            raise serializers.ValidationError({'role': 'Role cannot be set during registration'})
+
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({'password_confirm': 'Пароли не совпадают'})
 
@@ -29,6 +29,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
+        validated_data['role'] = User.Role.STUDENT
         user = User(**validated_data)
         user.set_password(password)
         user.save()
@@ -63,3 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'email', 'role', 'created_at')
         # email и role нельзя менять через /me/ — email - идентификатор,
         # role меняется только администратором через отдельный endpoint
+class AuthResponseSerializer(serializers.Serializer):
+    user = UserSerializer()
+    access = serializers.CharField()
+    refresh = serializers.CharField()

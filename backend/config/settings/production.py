@@ -5,7 +5,13 @@ DEBUG = False
 
 ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS').split(',')
 
-CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS').split(',')
+CORS_ALLOWED_ORIGINS = config(
+    'CORS_ALLOWED_ORIGINS',
+    default=config('CORS_ALLOWED_ORIGIN', default=''),
+).split(',')
+
+if SECRET_KEY == 'change-me-to-a-random-secret-key':
+    raise RuntimeError('DJANGO_SECRET_KEY must be changed for production.')
 
 # Настройки работы за Nginx с поддержкой SSL в продакшене
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

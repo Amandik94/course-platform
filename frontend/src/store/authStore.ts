@@ -13,6 +13,7 @@ interface AuthState {
     setAuth: (user: User, tokens: AuthTokens) => void;
     setUser: (user: User) => void;
     setAccessToken: (accessToken: string) => void;
+    setRefreshToken: (refreshToken: string) => void;
     logout: () => void;
     finishInitializing: () => void;
 }
@@ -40,6 +41,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     setAccessToken: (accessToken) => {
         localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
         set({ accessToken });
+    },
+
+    setRefreshToken: (refreshToken) => {
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+        set({ refreshToken });
     },
 
     logout: () => {

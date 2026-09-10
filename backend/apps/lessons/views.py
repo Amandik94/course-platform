@@ -1,7 +1,9 @@
 from rest_framework import generics
+from rest_framework.exceptions import PermissionDenied
 
 from apps.courses.models import Section
 from apps.courses.permissions import IsTeacherOwnerOrReadOnly
+from apps.courses.access import can_access_course_content
 from .models import Lesson
 from .serializers import LessonSerializer
 from drf_spectacular.utils import extend_schema_view, extend_schema
@@ -17,6 +19,7 @@ class LessonListCreateView(generics.ListCreateAPIView):
     POST /api/v1/sections/{section_id}/lessons/
     """
     serializer_class = LessonSerializer
+    pagination_class = None
 
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -25,7 +28,16 @@ class LessonListCreateView(generics.ListCreateAPIView):
         return [AllowAny()]
 
     def get_queryset(self):
-        return Lesson.objects.filter(section_id=self.kwargs['section_id'])
+        section = generics.get_object_or_404(
+            Section.objects.select_related('course'), id=self.kwargs['section_id']
+        )
+        self.check_object_permissions(self.request, section)
+        qs = Lesson.objects.filter(section=section).select_related('section__course')
+        if can_access_course_content(self.request.user, section.course):
+            return qs
+        if section.course.status == section.course.Status.PUBLISHED:
+            return qs.filter(is_free=True)
+        return qs.none()
 
     def perform_create(self, serializer):
         section = Section.objects.select_related('course').get(id=self.kwargs['section_id'])
@@ -45,5 +57,18 @@ class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
     DELETE /api/v1/lessons/{id}/
     """
     permission_classes = [IsTeacherOwnerOrReadOnly]
-    queryset = Lesson.objects.select_related('section__course')
     serializer_class = LessonSerializer
+
+    def get_queryset(self):
+        return Lesson.objects.select_related('section__course')
+
+    def get_object(self):
+        lesson = super().get_object()
+        if self.request.method in ('GET', 'HEAD', 'OPTIONS'):
+            course = lesson.section.course
+            if can_access_course_content(self.request.user, course):
+                return lesson
+            if course.status == course.Status.PUBLISHED and lesson.is_free:
+                return lesson
+            raise PermissionDenied('You do not have access to this lesson.')
+        return lesson

@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
@@ -39,7 +39,16 @@ class EnrollView(APIView):
         if Enrollment.objects.filter(student=request.user, course=course).exists():
             raise ValidationError({'detail': 'Вы уже записаны на этот курс'})
 
-        enrollment = Enrollment.objects.create(student=request.user, course=course)
+        try:
+            with transaction.atomic():
+                enrollment, created = Enrollment.objects.get_or_create(
+                    student=request.user, course=course
+                )
+        except IntegrityError:
+            raise ValidationError({'detail': 'You are already enrolled in this course'})
+
+        if not created:
+            raise ValidationError({'detail': 'You are already enrolled in this course'})
         return Response(EnrollmentSerializer(enrollment).data, status=status.HTTP_201_CREATED)
 
 @extend_schema_view(

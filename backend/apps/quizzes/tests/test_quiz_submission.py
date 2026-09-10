@@ -117,3 +117,15 @@ class TestQuizSubmission:
 
         response = teacher_client.get(reverse('quiz-detail', kwargs={'id': d['quiz'].id}))
         assert 'is_correct' in str(response.data)
+
+    def test_student_without_enrollment_cannot_read_quiz_detail(
+        self, api_client, quiz_with_questions, django_user_model,
+    ):
+        stranger = django_user_model.objects.create_user(
+            email='quiz-stranger@test.com', password='pass12345', role='student',
+        )
+        api_client.force_authenticate(user=stranger)
+
+        response = api_client.get(reverse('quiz-detail', kwargs={'id': quiz_with_questions['quiz'].id}))
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN

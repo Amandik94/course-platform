@@ -43,8 +43,8 @@ const Certificates = () => {
                         <span className={styles.number}>
                             Выдан: {new Date(cert.issued_at).toLocaleDateString()}
                         </span>
-                        {cert.pdf && (
-                            <a href={cert.pdf} target="_blank" rel="noopener noreferrer">
+                        {cert.download_url && (
+                            <a href={cert.download_url} target="_blank" rel="noopener noreferrer">
                                 <Button variant="secondary" fullWidth>Скачать PDF</Button>
                             </a>
                         )}

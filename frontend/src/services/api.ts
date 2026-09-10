@@ -8,7 +8,6 @@ export const api = axios.create({
     },
 });
 
-// --- REQUEST interceptor: подставляем access token в каждый запрос ---
 api.interceptors.request.use((config) => {
     const { accessToken } = getAuthState();
     if (accessToken && config.headers) {
@@ -17,21 +16,25 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// --- RESPONSE interceptor: обновляем access token при 401 ---
-
-// Флаг + очередь нужны, чтобы избежать ситуации, когда несколько
-// запросов одновременно словили 401 и каждый пытается обновить токен
-// параллельно — вместо этого только первый запускает refresh,
-// остальные ждут его результата.
 let isRefreshing = false;
-let refreshQueue: Array<(token: string) => void> = [];
+let refreshQueue: Array<{
+    resolve: (token: string) => void;
+    reject: (error: unknown) => void;
+}> = [];
 
-function subscribeToRefresh(callback: (token: string) => void) {
-    refreshQueue.push(callback);
+function waitForRefresh() {
+    return new Promise<string>((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+    });
 }
 
-function notifyRefreshSubscribers(token: string) {
-    refreshQueue.forEach((callback) => callback(token));
+function resolveRefreshQueue(token: string) {
+    refreshQueue.forEach((subscriber) => subscriber.resolve(token));
+    refreshQueue = [];
+}
+
+function rejectRefreshQueue(error: unknown) {
+    refreshQueue.forEach((subscriber) => subscriber.reject(error));
     refreshQueue = [];
 }
 
@@ -42,14 +45,15 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
 api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
-        const originalRequest = error.config as RetryableRequestConfig;
-
-        // Не пытаемся обновить токен для самих auth-эндпоинтов —
-        // иначе можно попасть в бесконечный цикл при неверном пароле и т.д.
+        const originalRequest = error.config as RetryableRequestConfig | undefined;
         const isAuthEndpoint = originalRequest?.url?.includes('/auth/');
 
+        if (!originalRequest) {
+            return Promise.reject(error);
+        }
+
         if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
-            const { refreshToken, setAccessToken, logout } = getAuthState();
+            const { refreshToken, setAccessToken, setRefreshToken, logout } = getAuthState();
 
             if (!refreshToken) {
                 logout();
@@ -60,28 +64,28 @@ api.interceptors.response.use(
             originalRequest._retry = true;
 
             if (isRefreshing) {
-                // уже идёт обновление токена — ждём его результата
-                return new Promise((resolve) => {
-                    subscribeToRefresh((newToken: string) => {
-                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                        resolve(api(originalRequest));
-                    });
-                });
+                const newToken = await waitForRefresh();
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return api(originalRequest);
             }
 
             isRefreshing = true;
             try {
-                const { data } = await axios.post('/api/v1/auth/refresh/', {
-                    refresh: refreshToken,
-                });
-                const newAccessToken = data.access;
+                const { data } = await axios.post<{ access: string; refresh?: string }>(
+                    '/api/v1/auth/refresh/',
+                    { refresh: refreshToken },
+                );
 
-                setAccessToken(newAccessToken);
-                notifyRefreshSubscribers(newAccessToken);
+                setAccessToken(data.access);
+                if (data.refresh) {
+                    setRefreshToken(data.refresh);
+                }
+                resolveRefreshQueue(data.access);
 
-                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                originalRequest.headers.Authorization = `Bearer ${data.access}`;
                 return api(originalRequest);
             } catch (refreshError) {
+                rejectRefreshQueue(refreshError);
                 logout();
                 window.location.href = '/login';
                 return Promise.reject(refreshError);

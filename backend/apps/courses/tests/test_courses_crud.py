@@ -45,6 +45,16 @@ class TestCourseList:
         assert 'My Draft' in titles
         assert 'Their Draft' not in titles
 
+    def test_anonymous_cannot_retrieve_draft_course_detail(self, api_client, teacher_user, category):
+        draft = Course.objects.create(
+            title='Hidden Draft', short_description='...', description='...',
+            category=category, teacher=teacher_user, status=Course.Status.DRAFT,
+        )
+
+        response = api_client.get(reverse('course-detail', kwargs={'id': draft.id}))
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
 
 @pytest.mark.django_db
 class TestCourseCreate:

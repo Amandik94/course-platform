@@ -3,6 +3,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.courses.access import can_access_course_content
 from apps.enrollments.models import Enrollment
 from .models import Assignment, AssignmentSubmission
 from apps.lessons.models import Lesson
@@ -25,6 +26,12 @@ class AssignmentDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Assignment.objects.select_related('lesson__section__course')
     serializer_class = AssignmentSerializer
+
+    def get_object(self):
+        assignment = super().get_object()
+        if not can_access_course_content(self.request.user, assignment.lesson.section.course):
+            raise PermissionDenied('You do not have access to this assignment.')
+        return assignment
 
 @extend_schema_view(
     post=extend_schema(tags=['Assignments'], summary='Отправить решение задания'),

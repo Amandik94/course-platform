@@ -1,3 +1,4 @@
+from django.http import FileResponse, Http404
 from rest_framework import generics, permissions
 
 from .models import Certificate
@@ -34,3 +35,17 @@ class CertificateDetailView(generics.RetrieveAPIView):
         if user.is_admin_role:
             return qs
         return qs.filter(student=user)
+
+
+class CertificateDownloadView(CertificateDetailView):
+    """GET /api/v1/certificates/{id}/download/."""
+
+    def get(self, request, *args, **kwargs):
+        certificate = self.get_object()
+        if not certificate.pdf:
+            raise Http404
+        return FileResponse(
+            certificate.pdf.open('rb'),
+            as_attachment=True,
+            filename=f'{certificate.certificate_number}.pdf',
+        )

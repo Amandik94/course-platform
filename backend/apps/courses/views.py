@@ -1,91 +1,79 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
 
+from drf_spectacular.utils import extend_schema, extend_schema_view
+
+from .access import visible_courses_for_user
 from .filters import CourseFilter
 from .models import Category, Course, Section
 from .permissions import IsTeacherOwnerOrReadOnly
 from .serializers import (
-    CategorySerializer, CourseDetailSerializer, CourseListSerializer, SectionSerializer,
+    CategorySerializer,
+    CourseDetailSerializer,
+    CourseListSerializer,
+    SectionSerializer,
 )
-from drf_spectacular.utils import extend_schema_view, extend_schema
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Categories'], summary='Список категорий'),
+    get=extend_schema(tags=['Categories'], summary='List categories'),
 )
-
 class CategoryListView(generics.ListAPIView):
-    """GET /api/v1/categories/ — публичный список категорий для фильтра"""
+    """GET /api/v1/categories/."""
     permission_classes = [permissions.AllowAny]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Courses'], summary='Список курсов (каталог)'),
-    post=extend_schema(tags=['Courses'], summary='Создать курс (только teacher/admin)'),
+    get=extend_schema(tags=['Courses'], summary='List courses'),
+    post=extend_schema(tags=['Courses'], summary='Create course'),
 )
-
 class CourseListCreateView(generics.ListCreateAPIView):
-    """
-    GET  /api/v1/courses/  — публичный каталог (только published для анонимов)
-    POST /api/v1/courses/  — создание курса (только teacher/admin)
-    """
+    """GET/POST /api/v1/courses/."""
     permission_classes = [IsTeacherOwnerOrReadOnly]
     filterset_class = CourseFilter
     search_fields = ['title', 'short_description']
     ordering_fields = ['created_at', 'title', 'duration']
 
     def get_queryset(self):
-        qs = Course.objects.select_related('category', 'teacher')
-        user = self.request.user
-        if user.is_authenticated and (user.is_teacher or user.is_admin_role):
-            if user.is_teacher and not user.is_admin_role:
-                # преподаватель видит свои курсы (в т.ч. draft) + все published
-                from django.db.models import Q
-                return qs.filter(Q(status=Course.Status.PUBLISHED) | Q(teacher=user))
-            return qs  # admin видит всё
-        return qs.filter(status=Course.Status.PUBLISHED)
+        return visible_courses_for_user(self.request.user).select_related('category', 'teacher')
 
     def get_serializer_class(self):
         return CourseDetailSerializer if self.request.method == 'POST' else CourseListSerializer
 
-@extend_schema_view(
-    get=extend_schema(tags=['Courses'], summary='Детали курса'),
-    patch=extend_schema(tags=['Courses'], summary='Обновить курс'),
-    delete=extend_schema(tags=['Courses'], summary='Удалить курс'),
-)
 
+@extend_schema_view(
+    get=extend_schema(tags=['Courses'], summary='Retrieve course'),
+    patch=extend_schema(tags=['Courses'], summary='Update course'),
+    delete=extend_schema(tags=['Courses'], summary='Delete course'),
+)
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET    /api/v1/courses/{id}/
-    PATCH  /api/v1/courses/{id}/
-    DELETE /api/v1/courses/{id}/
-    """
+    """GET/PATCH/DELETE /api/v1/courses/{id}/."""
     permission_classes = [IsTeacherOwnerOrReadOnly]
-    queryset = Course.objects.select_related('category', 'teacher')
     serializer_class = CourseDetailSerializer
     lookup_field = 'id'
+
+    def get_queryset(self):
+        return visible_courses_for_user(self.request.user).select_related('category', 'teacher')
 
     def perform_destroy(self, instance):
         if instance.enrollments.exists():
             raise ValidationError({
-                'detail': 'Нельзя удалить курс, на который уже записаны студенты. '
-                        'Переведите курс в статус archived вместо удаления.'
+                'detail': (
+                    'Cannot delete a course with enrolled students. '
+                    'Archive the course instead.'
+                )
             })
         instance.delete()
-        
+
 
 @extend_schema_view(
-    get=extend_schema(tags=['Sections'], summary='Список разделов'),
-    post=extend_schema(tags=['Sections'], summary='Создать раздел'),
-)    
-
+    get=extend_schema(tags=['Sections'], summary='List sections'),
+    post=extend_schema(tags=['Sections'], summary='Create section'),
+)
 class SectionListCreateView(generics.ListCreateAPIView):
-    """
-    GET  /api/v1/courses/{course_id}/sections/
-    POST /api/v1/courses/{course_id}/sections/
-    """
+    """GET/POST /api/v1/courses/{course_id}/sections/."""
     serializer_class = SectionSerializer
 
     def get_permissions(self):
@@ -94,25 +82,28 @@ class SectionListCreateView(generics.ListCreateAPIView):
         return [permissions.AllowAny()]
 
     def get_queryset(self):
-        return Section.objects.filter(course_id=self.kwargs['course_id'])
+        course_ids = visible_courses_for_user(self.request.user).values('id')
+        return Section.objects.filter(
+            course_id=self.kwargs['course_id'],
+            course_id__in=course_ids,
+        ).select_related('course')
 
     def perform_create(self, serializer):
-        course = Course.objects.get(id=self.kwargs['course_id'])
-        # object-level проверка владения курсом — вызываем вручную,
-        # т.к. ListCreateAPIView.create() не вызывает check_object_permissions
+        course = generics.get_object_or_404(Course, id=self.kwargs['course_id'])
         self.check_object_permissions(self.request, course)
         serializer.save(course=course)
 
-@extend_schema_view(
-    patch=extend_schema(tags=['Sections'], summary='Обновить раздел'),
-    delete=extend_schema(tags=['Sections'], summary='Удалить раздел'),
-)
 
+@extend_schema_view(
+    get=extend_schema(tags=['Sections'], summary='Retrieve section'),
+    patch=extend_schema(tags=['Sections'], summary='Update section'),
+    delete=extend_schema(tags=['Sections'], summary='Delete section'),
+)
 class SectionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    PATCH  /api/v1/sections/{id}/
-    DELETE /api/v1/sections/{id}/
-    """
+    """GET/PATCH/DELETE /api/v1/sections/{id}/."""
     permission_classes = [IsTeacherOwnerOrReadOnly]
-    queryset = Section.objects.select_related('course')
     serializer_class = SectionSerializer
+
+    def get_queryset(self):
+        course_ids = visible_courses_for_user(self.request.user).values('id')
+        return Section.objects.filter(course_id__in=course_ids).select_related('course')

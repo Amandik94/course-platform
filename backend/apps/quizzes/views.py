@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.enrollments.models import Enrollment
+from apps.courses.access import can_access_course_content
 from .models import Answer, Question, Quiz, QuizAttempt
 from .permissions import IsQuizTeacherOwner
 from .serializers import (
@@ -27,6 +28,12 @@ class QuizDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Quiz.objects.select_related('lesson__section__course').prefetch_related('questions__answers')
     lookup_url_kwarg = 'id'
+
+    def get_object(self):
+        quiz = super().get_object()
+        if not can_access_course_content(self.request.user, quiz.lesson.section.course):
+            raise PermissionDenied('You do not have access to this quiz.')
+        return quiz
 
     def get_serializer_class(self):
         quiz = self.get_object()

@@ -66,3 +66,18 @@ class TestRegistration:
         response = api_client.post(url, payload)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_cannot_register_as_teacher(self, api_client):
+        url = reverse('auth-register')
+        payload = {
+            'email': 'teacher-signup@test.com',
+            'password': 'strongpass123',
+            'password_confirm': 'strongpass123',
+            'first_name': 'Teacher',
+            'last_name': 'Signup',
+            'role': 'teacher',
+        }
+        response = api_client.post(url, payload)
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert not User.objects.filter(email='teacher-signup@test.com').exists()

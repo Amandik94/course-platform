@@ -21,7 +21,11 @@ class Enrollment(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['student', 'course'], name='unique_student_course_enrollment'
-            )
+            ),
+            models.CheckConstraint(
+                check=models.Q(progress__gte=0, progress__lte=100),
+                name='enrollment_progress_0_100',
+            ),
         ]
 
     def __str__(self):
