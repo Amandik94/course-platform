@@ -24,8 +24,10 @@ from rest_framework import filters
 class AssignmentDetailView(generics.RetrieveAPIView):
     """GET /api/v1/assignments/{id}/ — условие задания"""
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'submissions'
     queryset = Assignment.objects.select_related('lesson__section__course')
     serializer_class = AssignmentSerializer
+    lookup_url_kwarg = 'id'
 
     def get_object(self):
         assignment = super().get_object()
@@ -104,7 +106,7 @@ class AssignmentSubmissionsListView(generics.ListAPIView):
         ).select_related('student', 'assignment')
 
 @extend_schema_view(
-    get=extend_schema(tags=['Assignments'], summary='Детали решения задания'),
+    patch=extend_schema(tags=['Assignments'], summary='Проверить решение задания'),
 )
 
 class SubmissionReviewView(generics.UpdateAPIView):

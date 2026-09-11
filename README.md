@@ -91,3 +91,45 @@ npm test
 - CI/CD (GitHub Actions: lint + test на каждый PR)
 - Полноценное мобильное меню Navbar
 - Debounce на поиске по каталогу
+## Docker Environments
+
+Development compose runs PostgreSQL, Django runserver and Vite dev server:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Production compose runs PostgreSQL, Django behind Nginx and a static React build:
+
+```bash
+docker compose -f docker-compose.prod.yml up --build
+```
+
+Required environment variables are documented in `.env.example` and `backend/.env.example`.
+Use generated secrets for local `.env` files and never commit real production secrets.
+
+## Health Checks
+
+The public health endpoint is available at:
+
+```text
+GET /api/health/
+```
+
+It returns only a simple status payload and does not expose configuration, credentials or stack details.
+
+## PostgreSQL Backup / Restore
+
+Create a backup:
+
+```bash
+docker compose -f docker-compose.prod.yml exec postgres pg_dump -U "$DB_USER" "$DB_NAME" > backup.sql
+```
+
+Restore into a prepared database:
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T postgres psql -U "$DB_USER" "$DB_NAME" < backup.sql
+```
+
+Review backups before restore and do not run restore against production without an explicit maintenance plan.

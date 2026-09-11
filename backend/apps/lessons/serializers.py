@@ -16,7 +16,7 @@ class LessonSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('section',)
 
-    def get_assignment_id(self, obj):
+    def get_assignment_id(self, obj) -> int | None:
         # OneToOneField создаёт обратную связь obj.assignment,
         # которая бросает Lesson.assignment.RelatedObjectDoesNotExist,
         # если задания ещё нет — ловим это явно, а не полагаемся на None
@@ -25,7 +25,7 @@ class LessonSerializer(serializers.ModelSerializer):
         except Lesson.assignment.RelatedObjectDoesNotExist:
             return None
 
-    def get_quiz_id(self, obj):
+    def get_quiz_id(self, obj) -> int | None:
         try:
             return obj.quiz.id
         except Lesson.quiz.RelatedObjectDoesNotExist:

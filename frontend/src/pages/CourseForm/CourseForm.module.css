@@ -1,0 +1,66 @@
+.page {
+    padding: var(--spacing-xl) 0;
+}
+
+.header,
+.row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.header {
+    margin-bottom: var(--spacing-lg);
+}
+
+.header p {
+    color: var(--color-text-secondary);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    max-width: 900px;
+}
+
+.row {
+    flex-wrap: wrap;
+}
+
+.field {
+    display: flex;
+    flex: 1;
+    min-width: 180px;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.field textarea,
+.field select {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+}
+
+.success {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-success);
+    border-radius: var(--radius-md);
+    color: var(--color-success);
+    background: var(--color-success-bg);
+}
+
+@media (max-width: 768px) {
+    .header,
+    .row {
+        flex-direction: column;
+    }
+}

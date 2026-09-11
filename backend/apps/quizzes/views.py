@@ -1,6 +1,6 @@
 from django.db import transaction
 from rest_framework import generics, permissions, status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -26,6 +26,7 @@ class QuizDetailView(generics.RetrieveAPIView):
     Преподаватель-владелец видит is_correct, студент — нет.
     """
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'submissions'
     queryset = Quiz.objects.select_related('lesson__section__course').prefetch_related('questions__answers')
     lookup_url_kwarg = 'id'
 
@@ -36,6 +37,8 @@ class QuizDetailView(generics.RetrieveAPIView):
         return quiz
 
     def get_serializer_class(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return QuizSerializer
         quiz = self.get_object()
         user = self.request.user
         is_owner = user.is_admin_role or quiz.lesson.section.course.teacher == user
@@ -151,6 +154,27 @@ class QuizCreateView(generics.CreateAPIView):
         self.check_object_permissions(self.request, lesson)
         serializer.save(lesson=lesson)
 
+
+@extend_schema_view(
+    get=extend_schema(tags=['Quizzes'], summary='Retrieve quiz for management'),
+    patch=extend_schema(tags=['Quizzes'], summary='Update quiz'),
+    delete=extend_schema(tags=['Quizzes'], summary='Delete quiz'),
+)
+class QuizManageView(generics.RetrieveUpdateDestroyAPIView):
+    """GET/PATCH/DELETE /api/v1/quizzes/{id}/manage/."""
+
+    permission_classes = [permissions.IsAuthenticated, IsQuizTeacherOwner]
+    queryset = Quiz.objects.select_related('lesson__section__course').prefetch_related('questions__answers')
+    serializer_class = QuizSerializer
+    lookup_url_kwarg = 'id'
+
+    def perform_destroy(self, instance):
+        if instance.attempts.exists():
+            raise ValidationError({
+                'detail': 'Cannot delete a quiz that already has student attempts.'
+            })
+        instance.delete()
+
 @extend_schema_view(
     post=extend_schema(tags=['Quizzes'], summary='Создать вопрос'),
 )
@@ -189,7 +213,8 @@ class AnswerCreateView(generics.CreateAPIView):
         serializer.save(question=question)
 
 @extend_schema_view(
-    post=extend_schema(tags=['Quizzes'], summary='Создать ответ'),
+    patch=extend_schema(tags=['Quizzes'], summary='Обновить вопрос'),
+    delete=extend_schema(tags=['Quizzes'], summary='Удалить вопрос'),
 )
 
 class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):

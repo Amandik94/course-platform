@@ -1,3 +1,4 @@
+from django.db.models import Count
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
 
@@ -13,16 +14,47 @@ from .serializers import (
     CourseListSerializer,
     SectionSerializer,
 )
+from apps.users.permissions import IsAdmin
 
 
 @extend_schema_view(
     get=extend_schema(tags=['Categories'], summary='List categories'),
+    post=extend_schema(tags=['Categories'], summary='Create category'),
 )
-class CategoryListView(generics.ListAPIView):
-    """GET /api/v1/categories/."""
-    permission_classes = [permissions.AllowAny]
+class CategoryListView(generics.ListCreateAPIView):
+    """GET/POST /api/v1/categories/."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [permissions.IsAuthenticated(), IsAdmin()]
+        return [permissions.AllowAny()]
+
+
+@extend_schema_view(
+    get=extend_schema(tags=['Categories'], summary='Retrieve category'),
+    patch=extend_schema(tags=['Categories'], summary='Update category'),
+    delete=extend_schema(tags=['Categories'], summary='Delete category'),
+)
+class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """GET/PATCH/DELETE /api/v1/categories/{id}/."""
+
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    lookup_field = 'id'
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated(), IsAdmin()]
+
+    def perform_destroy(self, instance):
+        if instance.courses.exists():
+            raise ValidationError({
+                'detail': 'Cannot delete a category that still has courses.'
+            })
+        instance.delete()
 
 
 @extend_schema_view(
@@ -37,7 +69,12 @@ class CourseListCreateView(generics.ListCreateAPIView):
     ordering_fields = ['created_at', 'title', 'duration']
 
     def get_queryset(self):
-        return visible_courses_for_user(self.request.user).select_related('category', 'teacher')
+        return (
+            visible_courses_for_user(self.request.user)
+            .select_related('category', 'teacher')
+            .annotate(lessons_total=Count('sections__lessons', distinct=True))
+            .order_by('-created_at')
+        )
 
     def get_serializer_class(self):
         return CourseDetailSerializer if self.request.method == 'POST' else CourseListSerializer
@@ -55,7 +92,13 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
     def get_queryset(self):
-        return visible_courses_for_user(self.request.user).select_related('category', 'teacher')
+        return (
+            visible_courses_for_user(self.request.user)
+            .select_related('category', 'teacher')
+            .prefetch_related('sections__lessons')
+            .annotate(lessons_total=Count('sections__lessons', distinct=True))
+            .order_by('-created_at')
+        )
 
     def perform_destroy(self, instance):
         if instance.enrollments.exists():
@@ -82,6 +125,8 @@ class SectionListCreateView(generics.ListCreateAPIView):
         return [permissions.AllowAny()]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Section.objects.none()
         course_ids = visible_courses_for_user(self.request.user).values('id')
         return Section.objects.filter(
             course_id=self.kwargs['course_id'],

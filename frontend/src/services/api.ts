@@ -1,8 +1,10 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { getAuthState } from '../store/authStore';
 
+const API_BASE_URL = `${import.meta.env.VITE_API_URL || '/api/v1/'}`.replace(/\/?$/, '/');
+
 export const api = axios.create({
-    baseURL: '/api/v1/',
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -72,7 +74,7 @@ api.interceptors.response.use(
             isRefreshing = true;
             try {
                 const { data } = await axios.post<{ access: string; refresh?: string }>(
-                    '/api/v1/auth/refresh/',
+                    `${API_BASE_URL}auth/refresh/`,
                     { refresh: refreshToken },
                 );
 

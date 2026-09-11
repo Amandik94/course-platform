@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 
+from config.validators import validate_image_upload
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True, verbose_name='Название')
@@ -39,7 +40,10 @@ class Course(models.Model):
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     description = models.TextField(verbose_name='Полное описание')
     short_description = models.CharField(max_length=300, verbose_name='Краткое описание')
-    cover = models.ImageField(upload_to='courses/covers/', null=True, blank=True)
+    cover = models.ImageField(
+        upload_to='courses/covers/', null=True, blank=True,
+        validators=[validate_image_upload],
+    )
     category = models.ForeignKey(
         Category, on_delete=models.PROTECT, related_name='courses', verbose_name='Категория'
     )

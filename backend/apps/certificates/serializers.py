@@ -11,11 +11,11 @@ class CertificateSerializer(serializers.ModelSerializer):
         model = Certificate
         fields = (
             'id', 'course', 'course_title', 'certificate_number',
-            'issued_at', 'pdf', 'download_url',
+            'issued_at', 'download_url',
         )
         read_only_fields = fields
 
-    def get_download_url(self, obj):
+    def get_download_url(self, obj) -> str | None:
         request = self.context.get('request')
         if not obj.pdf:
             return None

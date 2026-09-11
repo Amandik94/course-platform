@@ -17,6 +17,7 @@ export interface CourseListItem {
     cover: string | null;
     category: Category;
     teacher_name: string;
+    teacher_id: number;
     level: CourseLevel;
     duration: number;
     lessons_count: number;
@@ -82,4 +83,31 @@ export interface CourseFilters {
     level?: CourseLevel | '';
     ordering?: string;
     page?: number;
+}
+
+export interface CourseUpsertPayload {
+    title: string;
+    description: string;
+    short_description: string;
+    category_id: number;
+    level: CourseLevel;
+    duration: number;
+    status: CourseStatus;
+}
+
+export interface SectionUpsertPayload {
+    title: string;
+    description: string;
+    order: number;
+}
+
+export interface LessonUpsertPayload {
+    title: string;
+    description: string;
+    type: Lesson['type'];
+    content: string;
+    video_url: string;
+    duration: number;
+    order: number;
+    is_free: boolean;
 }

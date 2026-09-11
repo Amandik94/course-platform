@@ -23,7 +23,14 @@ const Navbar = () => {
                 )}
 
                 {isAuthenticated && (user?.role === 'teacher' || user?.role === 'admin') && (
-                    <Link to="/dashboard" className={styles.link}>Dashboard</Link>
+                    <>
+                        <Link to="/dashboard" className={styles.link}>Dashboard</Link>
+                        <Link to="/teacher/courses" className={styles.link}>Teacher CRUD</Link>
+                    </>
+                )}
+
+                {isAuthenticated && user?.role === 'admin' && (
+                    <Link to="/admin/courses" className={styles.link}>Admin CRUD</Link>
                 )}
 
                 {isAuthenticated && user?.role === 'student' && (

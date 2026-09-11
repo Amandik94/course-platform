@@ -1,4 +1,4 @@
-import { type InputHTMLAttributes, forwardRef } from 'react';
+import { type InputHTMLAttributes, forwardRef, useId } from 'react';
 import styles from './Input.module.css';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -11,7 +11,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 // понадобится в будущем — стандартная практика для reusable input.
 const Input = forwardRef<HTMLInputElement, InputProps>(
     ({ label, error, id, className, ...rest }, ref) => {
-        const inputId = id ?? rest.name;
+        const generatedId = useId();
+        const inputId = id ?? rest.name ?? generatedId;
 
         return (
             <div className={styles.wrapper}>

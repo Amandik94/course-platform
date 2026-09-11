@@ -28,6 +28,8 @@ class LessonListCreateView(generics.ListCreateAPIView):
         return [AllowAny()]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Lesson.objects.none()
         section = generics.get_object_or_404(
             Section.objects.select_related('course'), id=self.kwargs['section_id']
         )

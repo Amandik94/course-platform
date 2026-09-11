@@ -22,3 +22,17 @@ export interface AssignmentSubmission {
     created_at: string;
     updated_at: string;
 }
+
+export interface AssignmentUpsertPayload {
+    title: string;
+    description: string;
+    starter_code: string;
+    max_score: number;
+    deadline: string | null;
+}
+
+export interface SubmissionReviewPayload {
+    status: SubmissionStatus;
+    score: number | null;
+    teacher_comment: string;
+}

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
+from config.validators import validate_image_upload
 from .managers import UserManager
 
 
@@ -22,7 +23,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=150, verbose_name='Имя')
     last_name = models.CharField(max_length=150, verbose_name='Фамилия')
     avatar = models.ImageField(
-        upload_to='avatars/', null=True, blank=True, verbose_name='Аватар'
+        upload_to='avatars/', null=True, blank=True,
+        validators=[validate_image_upload],
+        verbose_name='Аватар',
     )
     role = models.CharField(
         max_length=20, choices=Role.choices, default=Role.STUDENT, verbose_name='Роль'
@@ -46,17 +49,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f'{self.email} ({self.get_role_display()})'
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f'{self.first_name} {self.last_name}'.strip()
 
     @property
-    def is_student(self):
+    def is_student(self) -> bool:
         return self.role == self.Role.STUDENT
 
     @property
-    def is_teacher(self):
+    def is_teacher(self) -> bool:
         return self.role == self.Role.TEACHER
 
     @property
-    def is_admin_role(self):
+    def is_admin_role(self) -> bool:
         return self.role == self.Role.ADMIN

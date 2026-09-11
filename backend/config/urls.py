@@ -5,12 +5,14 @@ from django.conf.urls.static import static
 from drf_spectacular.views import (
     SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView,
 )
+from .views import HealthCheckView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # API v1 — сюда постепенно будем подключать роуты apps
     path('api/v1/', include('config.api_urls')),
+    path('api/health/', HealthCheckView.as_view(), name='health-check'),
 
     # Документация API
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

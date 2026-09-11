@@ -1,0 +1,114 @@
+.page {
+    padding: var(--spacing-xl) 0;
+}
+
+.header,
+.filters,
+.actions,
+.formActions {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.header {
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-lg);
+}
+
+.header p,
+.muted {
+    color: var(--color-text-secondary);
+}
+
+.filters {
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.field select,
+.field textarea {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+}
+
+.table {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--color-surface);
+}
+
+.tableHead,
+.tableRow {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 120px 120px 220px;
+    gap: var(--spacing-md);
+    align-items: center;
+    padding: var(--spacing-md);
+}
+
+.tableHead {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    background: var(--color-background);
+}
+
+.tableRow {
+    border-top: 1px solid var(--color-border);
+}
+
+.panel {
+    max-width: 720px;
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.success {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-success);
+    border-radius: var(--radius-md);
+    color: var(--color-success);
+    background: var(--color-success-bg);
+}
+
+@media (max-width: 900px) {
+    .header,
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tableHead {
+        display: none;
+    }
+
+    .tableRow {
+        grid-template-columns: 1fr;
+    }
+}

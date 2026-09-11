@@ -66,7 +66,19 @@ class MyCoursesView(generics.ListAPIView):
     def get_queryset(self):
         return Enrollment.objects.filter(
             student=self.request.user
-        ).select_related('course', 'course__category', 'course__teacher')
+        ).select_related(
+            'course', 'course__category', 'course__teacher'
+        ).prefetch_related('course__sections__lessons')
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['completed_lesson_ids'] = set(
+            LessonProgress.objects.filter(
+                student=self.request.user,
+                is_completed=True,
+            ).values_list('lesson_id', flat=True)
+        )
+        return context
 
 
 @extend_schema_view(
@@ -79,6 +91,8 @@ class ProgressListView(generics.ListAPIView):
     pagination_class = None  # это "справочник" для построения UI, не постраничный список
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return LessonProgress.objects.none()
         return LessonProgress.objects.filter(
             student=self.request.user
         ).select_related('lesson')

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+﻿import { describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useCourses } from './useCourses';
 import { courseService } from '../../services/courseService';
@@ -17,7 +17,7 @@ describe('useCourses', () => {
                 id: 1, title: 'Django Course', slug: 'django-course',
                 short_description: '...', cover: null,
                 category: { id: 1, name: 'Python', slug: 'python', description: '' },
-                teacher_name: 'Пётр Петров', level: 'junior', duration: 10,
+                teacher_name: 'Teacher', teacher_id: 1, level: 'junior', duration: 10,
                 lessons_count: 5, status: 'published',
             }],
         });

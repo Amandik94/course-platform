@@ -13,6 +13,20 @@
     margin-top: var(--spacing-xl);
 }
 
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
 .tableRow {
     display: flex;
     justify-content: space-between;
@@ -23,6 +37,11 @@
 
 @media (max-width: 768px) {
     .statsGrid { grid-template-columns: repeat(2, 1fr); }
+
+    .sectionHeader {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }
 
 @media (max-width: 420px) {

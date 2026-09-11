@@ -15,6 +15,8 @@ class CertificateListView(generics.ListAPIView):
     serializer_class = CertificateSerializer
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Certificate.objects.none()
         return Certificate.objects.filter(
             student=self.request.user
         ).select_related('course')
@@ -30,6 +32,8 @@ class CertificateDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         # студент видит только свои сертификаты, admin — все
+        if getattr(self, 'swagger_fake_view', False):
+            return Certificate.objects.none()
         user = self.request.user
         qs = Certificate.objects.select_related('course', 'student')
         if user.is_admin_role:

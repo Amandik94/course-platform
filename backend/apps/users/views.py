@@ -1,12 +1,21 @@
-from rest_framework import generics, status
+from rest_framework import filters, generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
-from .serializers import AuthResponseSerializer, LoginSerializer, RegisterSerializer, UserSerializer
+from .models import User
+from .permissions import IsAdmin
+from .serializers import (
+    AdminUserSerializer,
+    AuthResponseSerializer,
+    LoginSerializer,
+    RegisterSerializer,
+    UserSerializer,
+)
 
 
 
@@ -17,6 +26,7 @@ class RegisterView(generics.CreateAPIView):
     """POST /api/v1/auth/register/"""
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
+    throttle_scope = 'auth'
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -39,6 +49,7 @@ class RegisterView(generics.CreateAPIView):
 class LoginView(APIView):
     """POST /api/v1/auth/login/"""
     permission_classes = [AllowAny]
+    throttle_scope = 'auth'
     
     @extend_schema(
         request=LoginSerializer,
@@ -69,6 +80,7 @@ class LogoutView(APIView):
     использовать для получения нового access token.
     """
     permission_classes = [IsAuthenticated]
+    throttle_scope = 'auth'
     
     @extend_schema(
         request={'application/json': {'type': 'object', 'properties': {'refresh': {'type': 'string'}}}},
@@ -103,3 +115,51 @@ class MeView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class ScopedTokenRefreshView(TokenRefreshView):
+    """Token refresh endpoint with its own throttle scope."""
+
+    throttle_scope = 'token_refresh'
+
+
+@extend_schema_view(
+    get=extend_schema(tags=['Admin'], summary='List users'),
+)
+class AdminUserListView(generics.ListAPIView):
+    """GET /api/v1/admin/users/."""
+
+    permission_classes = [IsAuthenticated, IsAdmin]
+    serializer_class = AdminUserSerializer
+    queryset = User.objects.all().order_by('-created_at')
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['email', 'first_name', 'last_name']
+    ordering_fields = ['created_at', 'email', 'role', 'is_active']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        role = self.request.query_params.get('role')
+        is_active = self.request.query_params.get('is_active')
+        if role:
+            queryset = queryset.filter(role=role)
+        if is_active is not None:
+            normalized = is_active.lower()
+            if normalized in {'true', '1', 'yes'}:
+                queryset = queryset.filter(is_active=True)
+            elif normalized in {'false', '0', 'no'}:
+                queryset = queryset.filter(is_active=False)
+        return queryset
+
+
+@extend_schema_view(
+    get=extend_schema(tags=['Admin'], summary='Retrieve user'),
+    patch=extend_schema(tags=['Admin'], summary='Update user'),
+)
+class AdminUserDetailView(generics.RetrieveUpdateAPIView):
+    """GET/PATCH /api/v1/admin/users/{id}/."""
+
+    permission_classes = [IsAuthenticated, IsAdmin]
+    serializer_class = AdminUserSerializer
+    queryset = User.objects.all()
+    lookup_field = 'id'

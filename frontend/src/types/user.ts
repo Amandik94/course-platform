@@ -11,6 +11,26 @@ export interface User {
     created_at: string;
 }
 
+export interface AdminUser extends User {
+    is_active: boolean;
+    is_staff: boolean;
+    updated_at: string;
+}
+
+export interface AdminUserFilters {
+    search?: string;
+    role?: UserRole | '';
+    is_active?: string;
+    page?: number;
+}
+
+export interface AdminUserUpdatePayload {
+    first_name?: string;
+    last_name?: string;
+    role?: UserRole;
+    is_active?: boolean;
+}
+
 export interface AuthTokens {
     access: string;
     refresh: string;

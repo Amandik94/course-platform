@@ -68,3 +68,37 @@ class AuthResponseSerializer(serializers.Serializer):
     user = UserSerializer()
     access = serializers.CharField()
     refresh = serializers.CharField()
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """Admin-only serializer for user management."""
+
+    full_name = serializers.ReadOnlyField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'email', 'first_name', 'last_name', 'full_name',
+            'avatar', 'role', 'is_active', 'is_staff', 'created_at', 'updated_at',
+        )
+        read_only_fields = ('id', 'email', 'full_name', 'is_staff', 'created_at', 'updated_at')
+
+    def validate(self, attrs):
+        forbidden_fields = {'password', 'is_superuser', 'is_staff'}
+        unsafe_fields = forbidden_fields.intersection(self.initial_data.keys())
+        if unsafe_fields:
+            raise serializers.ValidationError({
+                field: 'This field cannot be changed through this endpoint.'
+                for field in sorted(unsafe_fields)
+            })
+
+        request = self.context.get('request')
+        if request and self.instance == request.user:
+            new_role = attrs.get('role', self.instance.role)
+            new_is_active = attrs.get('is_active', self.instance.is_active)
+            if new_role != User.Role.ADMIN:
+                raise serializers.ValidationError({'role': 'Admins cannot demote their own account.'})
+            if new_is_active is False:
+                raise serializers.ValidationError({'is_active': 'Admins cannot block their own account.'})
+
+        return attrs
