@@ -4,6 +4,7 @@ import { authService } from '../../services/authService';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 import Button from '../../components/Button/Button';
 import Input from '../../components/Input/Input';
+import { ROLE_LABELS } from '../../utils/labels';
 import styles from './Profile.module.css';
 
 const Profile = () => {
@@ -43,7 +44,7 @@ const Profile = () => {
                     </div>
                     <div>
                         <h2>{user.full_name}</h2>
-                        <span className={styles.roleTag}>{user.role}</span>
+                        <span className={styles.roleTag}>{ROLE_LABELS[user.role]}</span>
                     </div>
                 </div>
 
@@ -51,7 +52,7 @@ const Profile = () => {
                     {successMessage && <div className={styles.successBanner}>{successMessage}</div>}
                     {errorMessage && <div className={styles.errorBanner}>{errorMessage}</div>}
 
-                    <Input label="Email" value={user.email} disabled />
+                    <Input label="Электронная почта" value={user.email} disabled />
                     <Input
                         label="Имя"
                         value={firstName}

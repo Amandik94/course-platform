@@ -1,0 +1,44 @@
+.readonly,
+.interactive {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.star,
+.activeStar {
+    font-size: var(--font-size-md);
+}
+
+.star {
+    color: var(--color-border);
+}
+
+.activeStar {
+    color: #f59e0b;
+}
+
+.button,
+.activeButton {
+    border: none;
+    background: transparent;
+    padding: 2px;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.button {
+    color: var(--color-border);
+}
+
+.activeButton {
+    color: #f59e0b;
+}
+
+.button:focus-visible,
+.activeButton:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}

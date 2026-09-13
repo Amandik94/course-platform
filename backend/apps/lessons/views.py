@@ -10,8 +10,8 @@ from drf_spectacular.utils import extend_schema_view, extend_schema
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Lessons'], summary='Список уроков'),
-    post=extend_schema(tags=['Lessons'], summary='Создать урок'),
+    get=extend_schema(tags=['Уроки'], summary='Список уроков'),
+    post=extend_schema(tags=['Уроки'], summary='Создать урок'),
 )
 class LessonListCreateView(generics.ListCreateAPIView):
     """
@@ -47,9 +47,9 @@ class LessonListCreateView(generics.ListCreateAPIView):
         serializer.save(section=section)
 
 @extend_schema_view(
-    get=extend_schema(tags=['Lessons'], summary='Детали урока'),
-    patch=extend_schema(tags=['Lessons'], summary='Обновить урок'),
-    delete=extend_schema(tags=['Lessons'], summary='Удалить урок'),
+    get=extend_schema(tags=['Уроки'], summary='Детали урока'),
+    patch=extend_schema(tags=['Уроки'], summary='Обновить урок'),
+    delete=extend_schema(tags=['Уроки'], summary='Удалить урок'),
 )
 
 class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -72,5 +72,5 @@ class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
                 return lesson
             if course.status == course.Status.PUBLISHED and lesson.is_free:
                 return lesson
-            raise PermissionDenied('You do not have access to this lesson.')
+            raise PermissionDenied('У вас нет доступа к этому уроку.')
         return lesson

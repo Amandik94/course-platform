@@ -68,6 +68,12 @@
     overflow: hidden;
 }
 
+.rating {
+    font-size: var(--font-size-sm);
+    color: #b45309;
+    font-weight: 600;
+}
+
 .meta {
     margin-top: auto;
     display: flex;

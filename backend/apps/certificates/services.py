@@ -1,16 +1,35 @@
 import io
+from pathlib import Path
 
 from django.core.files.base import ContentFile
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import cm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 from .models import Certificate
 
 
 CERTIFICATE_NUMBER_RETRIES = 5
+CYRILLIC_FONT_NAME = 'DejaVuSans'
+
+
+def _get_certificate_font() -> str:
+    font_paths = [
+        Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
+        Path('/usr/local/share/fonts/DejaVuSans.ttf'),
+        Path('C:/Windows/Fonts/arial.ttf'),
+    ]
+    if CYRILLIC_FONT_NAME in pdfmetrics.getRegisteredFontNames():
+        return CYRILLIC_FONT_NAME
+    for font_path in font_paths:
+        if font_path.exists():
+            pdfmetrics.registerFont(TTFont(CYRILLIC_FONT_NAME, str(font_path)))
+            return CYRILLIC_FONT_NAME
+    return 'Helvetica'
 
 
 def _generate_certificate_number() -> str:
@@ -31,25 +50,26 @@ def _render_pdf(student_name: str, course_title: str, certificate_number: str, i
     buffer = io.BytesIO()
     page = canvas.Canvas(buffer, pagesize=landscape(A4))
     width, height = landscape(A4)
+    font_name = _get_certificate_font()
 
-    page.setFont('Helvetica-Bold', 28)
-    page.drawCentredString(width / 2, height - 4 * cm, 'CERTIFICATE')
+    page.setFont(font_name, 28)
+    page.drawCentredString(width / 2, height - 4 * cm, 'СЕРТИФИКАТ')
 
-    page.setFont('Helvetica', 14)
-    page.drawCentredString(width / 2, height - 6 * cm, 'This certifies that')
+    page.setFont(font_name, 14)
+    page.drawCentredString(width / 2, height - 6 * cm, 'Настоящим подтверждается, что')
 
-    page.setFont('Helvetica-Bold', 22)
+    page.setFont(font_name, 22)
     page.drawCentredString(width / 2, height - 8 * cm, student_name)
 
-    page.setFont('Helvetica', 14)
-    page.drawCentredString(width / 2, height - 9.5 * cm, 'has successfully completed the course')
+    page.setFont(font_name, 14)
+    page.drawCentredString(width / 2, height - 9.5 * cm, 'успешно завершил(а) курс')
 
-    page.setFont('Helvetica-Bold', 18)
+    page.setFont(font_name, 18)
     page.drawCentredString(width / 2, height - 11 * cm, course_title)
 
-    page.setFont('Helvetica', 10)
-    page.drawString(2 * cm, 2 * cm, f'Number: {certificate_number}')
-    page.drawRightString(width - 2 * cm, 2 * cm, f'Issued: {issued_date}')
+    page.setFont(font_name, 10)
+    page.drawString(2 * cm, 2 * cm, f'Номер: {certificate_number}')
+    page.drawRightString(width - 2 * cm, 2 * cm, f'Дата выдачи: {issued_date}')
 
     page.showPage()
     page.save()
@@ -88,4 +108,4 @@ def issue_certificate(student, course) -> Certificate:
             if existing:
                 return existing
 
-    raise IntegrityError('Could not generate a unique certificate number.')
+    raise IntegrityError('Не удалось сгенерировать уникальный номер сертификата.')

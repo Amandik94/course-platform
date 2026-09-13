@@ -24,7 +24,7 @@ const Login = () => {
                     {error && <div className={styles.errorBanner}>{error}</div>}
 
                     <Input
-                        label="Email"
+                        label="Электронная почта"
                         type="email"
                         name="email"
                         value={email}

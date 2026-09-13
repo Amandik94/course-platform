@@ -1,4 +1,5 @@
-from django.db.models import Count
+from django.db.models import Avg, Count, FloatField, Value
+from django.db.models.functions import Coalesce
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
 
@@ -18,8 +19,8 @@ from apps.users.permissions import IsAdmin
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Categories'], summary='List categories'),
-    post=extend_schema(tags=['Categories'], summary='Create category'),
+    get=extend_schema(tags=['Категории'], summary='Список категорий'),
+    post=extend_schema(tags=['Категории'], summary='Создать категорию'),
 )
 class CategoryListView(generics.ListCreateAPIView):
     """GET/POST /api/v1/categories/."""
@@ -33,9 +34,9 @@ class CategoryListView(generics.ListCreateAPIView):
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Categories'], summary='Retrieve category'),
-    patch=extend_schema(tags=['Categories'], summary='Update category'),
-    delete=extend_schema(tags=['Categories'], summary='Delete category'),
+    get=extend_schema(tags=['Категории'], summary='Получить категорию'),
+    patch=extend_schema(tags=['Категории'], summary='Обновить категорию'),
+    delete=extend_schema(tags=['Категории'], summary='Удалить категорию'),
 )
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     """GET/PATCH/DELETE /api/v1/categories/{id}/."""
@@ -52,14 +53,14 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         if instance.courses.exists():
             raise ValidationError({
-                'detail': 'Cannot delete a category that still has courses.'
+                'detail': 'Нельзя удалить категорию, к которой привязаны курсы.'
             })
         instance.delete()
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Courses'], summary='List courses'),
-    post=extend_schema(tags=['Courses'], summary='Create course'),
+    get=extend_schema(tags=['Курсы'], summary='Список курсов'),
+    post=extend_schema(tags=['Курсы'], summary='Создать курс'),
 )
 class CourseListCreateView(generics.ListCreateAPIView):
     """GET/POST /api/v1/courses/."""
@@ -73,6 +74,14 @@ class CourseListCreateView(generics.ListCreateAPIView):
             visible_courses_for_user(self.request.user)
             .select_related('category', 'teacher')
             .annotate(lessons_total=Count('sections__lessons', distinct=True))
+            .annotate(
+                average_rating=Coalesce(
+                    Avg('reviews__rating'),
+                    Value(0.0),
+                    output_field=FloatField(),
+                ),
+                reviews_count=Count('reviews', distinct=True),
+            )
             .order_by('-created_at')
         )
 
@@ -81,9 +90,9 @@ class CourseListCreateView(generics.ListCreateAPIView):
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Courses'], summary='Retrieve course'),
-    patch=extend_schema(tags=['Courses'], summary='Update course'),
-    delete=extend_schema(tags=['Courses'], summary='Delete course'),
+    get=extend_schema(tags=['Курсы'], summary='Получить курс'),
+    patch=extend_schema(tags=['Курсы'], summary='Обновить курс'),
+    delete=extend_schema(tags=['Курсы'], summary='Удалить курс'),
 )
 class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
     """GET/PATCH/DELETE /api/v1/courses/{id}/."""
@@ -97,6 +106,14 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
             .select_related('category', 'teacher')
             .prefetch_related('sections__lessons')
             .annotate(lessons_total=Count('sections__lessons', distinct=True))
+            .annotate(
+                average_rating=Coalesce(
+                    Avg('reviews__rating'),
+                    Value(0.0),
+                    output_field=FloatField(),
+                ),
+                reviews_count=Count('reviews', distinct=True),
+            )
             .order_by('-created_at')
         )
 
@@ -104,16 +121,16 @@ class CourseDetailView(generics.RetrieveUpdateDestroyAPIView):
         if instance.enrollments.exists():
             raise ValidationError({
                 'detail': (
-                    'Cannot delete a course with enrolled students. '
-                    'Archive the course instead.'
+                    'Нельзя удалить курс, на который уже записаны студенты. '
+                    'Перенесите курс в архив.'
                 )
             })
         instance.delete()
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Sections'], summary='List sections'),
-    post=extend_schema(tags=['Sections'], summary='Create section'),
+    get=extend_schema(tags=['Разделы'], summary='Список разделов'),
+    post=extend_schema(tags=['Разделы'], summary='Создать раздел'),
 )
 class SectionListCreateView(generics.ListCreateAPIView):
     """GET/POST /api/v1/courses/{course_id}/sections/."""
@@ -140,9 +157,9 @@ class SectionListCreateView(generics.ListCreateAPIView):
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Sections'], summary='Retrieve section'),
-    patch=extend_schema(tags=['Sections'], summary='Update section'),
-    delete=extend_schema(tags=['Sections'], summary='Delete section'),
+    get=extend_schema(tags=['Разделы'], summary='Получить раздел'),
+    patch=extend_schema(tags=['Разделы'], summary='Обновить раздел'),
+    delete=extend_schema(tags=['Разделы'], summary='Удалить раздел'),
 )
 class SectionDetailView(generics.RetrieveUpdateDestroyAPIView):
     """GET/PATCH/DELETE /api/v1/sections/{id}/."""

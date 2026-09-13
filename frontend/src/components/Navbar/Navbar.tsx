@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useLogout } from '../../features/auth/useLogout';
 import Button from '../Button/Button';
+import NotificationBell from '../Notifications/NotificationBell';
 import styles from './Navbar.module.css';
 
 const Navbar = () => {
@@ -24,29 +25,30 @@ const Navbar = () => {
 
                 {isAuthenticated && (user?.role === 'teacher' || user?.role === 'admin') && (
                     <>
-                        <Link to="/dashboard" className={styles.link}>Dashboard</Link>
-                        <Link to="/teacher/courses" className={styles.link}>Teacher CRUD</Link>
+                        <Link to="/dashboard" className={styles.link}>Панель управления</Link>
+                        <Link to="/teacher/courses" className={styles.link}>Мои курсы</Link>
                     </>
                 )}
 
                 {isAuthenticated && user?.role === 'admin' && (
-                    <Link to="/admin/courses" className={styles.link}>Admin CRUD</Link>
+                    <Link to="/admin/courses" className={styles.link}>Администрирование</Link>
                 )}
 
                 {isAuthenticated && user?.role === 'student' && (
-                    <Link to="/dashboard" className={styles.link}>Dashboard</Link>
+                    <Link to="/dashboard" className={styles.link}>Панель управления</Link>
                 )}
             </div>
 
             <div className={styles.actions}>
                 {isAuthenticated && user ? (
                     <>
+                        <NotificationBell />
                         <Link to="/profile" className={styles.userName}>{user.full_name}</Link>
                         <Button variant="secondary" onClick={logout}>Выйти</Button>
                     </>
                 ) : (
                     <>
-                        <Link to="/login" className={styles.link}>Вход</Link>
+                        <Link to="/login" className={styles.link}>Войти</Link>
                         <Button variant="primary" onClick={() => (window.location.href = '/register')}>
                             Регистрация
                         </Button>

@@ -34,7 +34,7 @@ class LessonSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         lesson_type = attrs.get('type', getattr(self.instance, 'type', None))
         if lesson_type == Lesson.Type.VIDEO and not attrs.get('video_url', getattr(self.instance, 'video_url', '')):
-            raise serializers.ValidationError({'video_url': 'Обязательно для урока типа video'})
+            raise serializers.ValidationError({'video_url': 'Для видеоурока это поле обязательно'})
         return attrs
 
 

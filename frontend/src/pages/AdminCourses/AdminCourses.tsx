@@ -6,6 +6,7 @@ import Loader from '../../components/Loader/Loader';
 import { courseService } from '../../services/courseService';
 import type { CourseListItem, CourseStatus } from '../../types/course';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
+import { COURSE_STATUS_LABELS } from '../../utils/labels';
 import styles from './AdminCourses.module.css';
 
 const AdminCourses = () => {
@@ -39,7 +40,7 @@ const AdminCourses = () => {
             setCourses((items) => items.map((item) => (
                 item.id === course.id ? { ...item, status } : item
             )));
-            setSuccess('Course status updated.');
+            setSuccess('Статус курса обновлён.');
         } catch (err) {
             setError(getApiErrorMessage(err));
         } finally {
@@ -48,14 +49,14 @@ const AdminCourses = () => {
     };
 
     const deleteCourse = async (course: CourseListItem) => {
-        if (!window.confirm(`Delete course "${course.title}"?`)) return;
+        if (!window.confirm(`Удалить курс «${course.title}»?`)) return;
         setIsSaving(true);
         setError('');
         setSuccess('');
         try {
             await courseService.deleteCourse(course.id);
             setCourses((items) => items.filter((item) => item.id !== course.id));
-            setSuccess('Course deleted.');
+            setSuccess('Курс удалён.');
         } catch (err) {
             setError(getApiErrorMessage(err));
         } finally {
@@ -69,26 +70,26 @@ const AdminCourses = () => {
         <div className={styles.page}>
             <div className={styles.header}>
                 <div>
-                    <h1>Admin Courses</h1>
-                    <p>Moderate course visibility and remove courses when backend allows it.</p>
+                    <h1>Курсы</h1>
+                    <p>Модерация видимости курсов и удаление, если backend разрешает это действие.</p>
                 </div>
                 <Link to="/dashboard">
-                    <Button type="button" variant="secondary">Dashboard</Button>
+                    <Button type="button" variant="secondary">Панель управления</Button>
                 </Link>
             </div>
 
-            {error && <EmptyState title="Admin action failed" description={error} variant="error" />}
+            {error && <EmptyState title="Не удалось выполнить действие" description={error} variant="error" />}
             {success && <p className={styles.success}>{success}</p>}
 
             {courses.length === 0 && !error ? (
-                <EmptyState title="No courses" />
+                <EmptyState title="Курсов пока нет" />
             ) : (
                 <div className={styles.table}>
                     <div className={styles.tableHead}>
-                        <span>Course</span>
-                        <span>Teacher</span>
-                        <span>Status</span>
-                        <span>Actions</span>
+                        <span>Курс</span>
+                        <span>Преподаватель</span>
+                        <span>Статус</span>
+                        <span>Действия</span>
                     </div>
                     {courses.map((course) => (
                         <div key={course.id} className={styles.tableRow}>
@@ -100,20 +101,20 @@ const AdminCourses = () => {
                                     disabled={isSaving}
                                     onChange={(event) => void updateStatus(course, event.target.value as CourseStatus)}
                                 >
-                                    <option value="draft">Draft</option>
-                                    <option value="published">Published</option>
-                                    <option value="archived">Archived</option>
+                                    <option value="draft">{COURSE_STATUS_LABELS.draft}</option>
+                                    <option value="published">{COURSE_STATUS_LABELS.published}</option>
+                                    <option value="archived">{COURSE_STATUS_LABELS.archived}</option>
                                 </select>
                             </label>
                             <div className={styles.actions}>
                                 <Link to={`/courses/${course.id}`}>
-                                    <Button type="button" variant="secondary">View</Button>
+                                    <Button type="button" variant="secondary">Открыть</Button>
                                 </Link>
                                 <Link to={`/teacher/courses/${course.id}/manage`}>
-                                    <Button type="button" variant="secondary">Manage</Button>
+                                    <Button type="button" variant="secondary">Управлять</Button>
                                 </Link>
                                 <Button type="button" variant="danger" disabled={isSaving} onClick={() => void deleteCourse(course)}>
-                                    Delete
+                                    Удалить
                                 </Button>
                             </div>
                         </div>

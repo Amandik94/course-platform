@@ -21,6 +21,8 @@ export interface CourseListItem {
     level: CourseLevel;
     duration: number;
     lessons_count: number;
+    average_rating: number;
+    reviews_count: number;
     status: CourseStatus;
 }
 
@@ -45,6 +47,8 @@ export interface CourseDetail {
     duration: number;
     status: CourseStatus;
     lessons_count: number;
+    average_rating: number;
+    reviews_count: number;
     is_enrolled: boolean;
     created_at: string;
     updated_at: string;

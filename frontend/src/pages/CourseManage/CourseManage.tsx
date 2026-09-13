@@ -26,6 +26,7 @@ import type {
     QuizUpsertPayload,
 } from '../../types/quiz';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
+import { LESSON_TYPE_LABELS, QUESTION_TYPE_LABELS } from '../../utils/labels';
 import styles from './CourseManage.module.css';
 
 const EMPTY_SECTION: SectionUpsertPayload = { title: '', description: '', order: 1 };
@@ -188,7 +189,7 @@ const CourseManage = () => {
     const saveSection = async (event: FormEvent) => {
         event.preventDefault();
         if (!id || !sectionForm.title.trim()) {
-            setError('Section title is required.');
+            setError('Название раздела обязательно.');
             return;
         }
 
@@ -197,10 +198,10 @@ const CourseManage = () => {
         try {
             if (editingSectionId) {
                 await courseService.updateSection(editingSectionId, sectionForm);
-                setSuccess('Section updated.');
+                setSuccess('Раздел обновлён.');
             } else {
                 await courseService.createSection(id, sectionForm);
-                setSuccess('Section created.');
+                setSuccess('Раздел создан.');
             }
             setSectionForm(EMPTY_SECTION);
             setEditingSectionId(null);
@@ -218,12 +219,12 @@ const CourseManage = () => {
     };
 
     const deleteSection = async (section: Section) => {
-        if (!window.confirm(`Delete section "${section.title}"?`)) return;
+        if (!window.confirm(`Удалить раздел «${section.title}»?`)) return;
         setIsSaving(true);
         resetMessages();
         try {
             await courseService.deleteSection(section.id);
-            setSuccess('Section deleted.');
+            setSuccess('Раздел удалён.');
             await loadStructure();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -236,11 +237,11 @@ const CourseManage = () => {
         event.preventDefault();
         const targetSectionId = selectedSectionId;
         if (!targetSectionId || !lessonForm.title.trim()) {
-            setError('Select section and enter lesson title.');
+            setError('Выберите раздел и введите название урока.');
             return;
         }
         if (lessonForm.type === 'video' && !lessonForm.video_url.trim()) {
-            setError('Video URL is required for video lessons.');
+            setError('Для видеоурока нужна ссылка на видео.');
             return;
         }
 
@@ -249,10 +250,10 @@ const CourseManage = () => {
         try {
             if (editingLessonId) {
                 await courseService.updateLesson(editingLessonId, lessonForm);
-                setSuccess('Lesson updated.');
+                setSuccess('Урок обновлён.');
             } else {
                 await courseService.createLesson(targetSectionId, lessonForm);
-                setSuccess('Lesson created.');
+                setSuccess('Урок создан.');
             }
             setLessonForm(EMPTY_LESSON);
             setEditingLessonId(null);
@@ -281,12 +282,12 @@ const CourseManage = () => {
     };
 
     const deleteLesson = async (lesson: LessonDetail) => {
-        if (!window.confirm(`Delete lesson "${lesson.title}"?`)) return;
+        if (!window.confirm(`Удалить урок «${lesson.title}»?`)) return;
         setIsSaving(true);
         resetMessages();
         try {
             await courseService.deleteLesson(lesson.id);
-            setSuccess('Lesson deleted.');
+            setSuccess('Урок удалён.');
             await loadStructure();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -298,7 +299,7 @@ const CourseManage = () => {
     const saveAssignment = async (event: FormEvent) => {
         event.preventDefault();
         if (!selectedLesson || selectedLesson.type !== 'assignment') {
-            setError('Select an assignment lesson first.');
+            setError('Сначала выберите урок с заданием.');
             return;
         }
 
@@ -307,10 +308,10 @@ const CourseManage = () => {
         try {
             if (assignment) {
                 await assignmentService.updateAssignment(assignment.id, assignmentForm);
-                setSuccess('Assignment updated.');
+                setSuccess('Задание обновлено.');
             } else {
                 setAssignment(await assignmentService.createAssignment(selectedLesson.id, assignmentForm));
-                setSuccess('Assignment created.');
+                setSuccess('Задание создано.');
             }
             await loadStructure();
         } catch (err) {
@@ -321,14 +322,14 @@ const CourseManage = () => {
     };
 
     const deleteAssignment = async () => {
-        if (!assignment || !window.confirm(`Delete assignment "${assignment.title}"?`)) return;
+        if (!assignment || !window.confirm(`Удалить задание «${assignment.title}»?`)) return;
         setIsSaving(true);
         resetMessages();
         try {
             await assignmentService.deleteAssignment(assignment.id);
             setAssignment(null);
             setAssignmentForm(EMPTY_ASSIGNMENT);
-            setSuccess('Assignment deleted.');
+            setSuccess('Задание удалено.');
             await loadStructure();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -340,7 +341,7 @@ const CourseManage = () => {
     const saveQuiz = async (event: FormEvent) => {
         event.preventDefault();
         if (!selectedLesson || selectedLesson.type !== 'quiz') {
-            setError('Select a quiz lesson first.');
+            setError('Сначала выберите урок с тестом.');
             return;
         }
 
@@ -352,7 +353,7 @@ const CourseManage = () => {
                 : await quizService.createQuiz(selectedLesson.id, quizForm);
             setQuiz(savedQuiz);
             syncAnswerForms(savedQuiz.questions);
-            setSuccess(quiz ? 'Quiz updated.' : 'Quiz created.');
+            setSuccess(quiz ? 'Тест обновлён.' : 'Тест создан.');
             await loadStructure();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -362,14 +363,14 @@ const CourseManage = () => {
     };
 
     const deleteQuiz = async () => {
-        if (!quiz || !window.confirm(`Delete quiz "${quiz.title}"?`)) return;
+        if (!quiz || !window.confirm(`Удалить тест «${quiz.title}»?`)) return;
         setIsSaving(true);
         resetMessages();
         try {
             await quizService.deleteQuiz(quiz.id);
             setQuiz(null);
             setQuizForm(EMPTY_QUIZ);
-            setSuccess('Quiz deleted.');
+            setSuccess('Тест удалён.');
             await loadStructure();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -381,7 +382,7 @@ const CourseManage = () => {
     const saveQuestion = async (event: FormEvent) => {
         event.preventDefault();
         if (!quiz || !questionForm.question.trim()) {
-            setError('Create a quiz and enter a question first.');
+            setError('Сначала создайте тест и введите вопрос.');
             return;
         }
 
@@ -390,10 +391,10 @@ const CourseManage = () => {
         try {
             if (editingQuestionId) {
                 await quizService.updateQuestion(editingQuestionId, questionForm);
-                setSuccess('Question updated.');
+                setSuccess('Вопрос обновлён.');
             } else {
                 await quizService.createQuestion(quiz.id, questionForm);
-                setSuccess('Question created.');
+                setSuccess('Вопрос создан.');
             }
             setQuestionForm(EMPTY_QUESTION);
             setEditingQuestionId(null);
@@ -417,12 +418,12 @@ const CourseManage = () => {
     };
 
     const deleteQuestion = async (question: QuizQuestion) => {
-        if (!window.confirm(`Delete question "${question.question}"?`)) return;
+        if (!window.confirm(`Удалить вопрос «${question.question}»?`)) return;
         setIsSaving(true);
         resetMessages();
         try {
             await quizService.deleteQuestion(question.id);
-            setSuccess('Question deleted.');
+            setSuccess('Вопрос удалён.');
             await reloadSelectedLinkedContent();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -442,7 +443,7 @@ const CourseManage = () => {
         event.preventDefault();
         const form = answerForms[questionId] ?? EMPTY_ANSWER;
         if (!form.text.trim()) {
-            setError('Answer text is required.');
+            setError('Текст ответа обязателен.');
             return;
         }
 
@@ -451,10 +452,10 @@ const CourseManage = () => {
         try {
             if (editingAnswerId && editingAnswerQuestionId === questionId) {
                 await quizService.updateAnswer(editingAnswerId, form);
-                setSuccess('Answer updated.');
+                setSuccess('Ответ обновлён.');
             } else {
                 await quizService.createAnswer(questionId, form);
-                setSuccess('Answer created.');
+                setSuccess('Ответ создан.');
             }
             updateAnswerForm(questionId, EMPTY_ANSWER);
             setEditingAnswerId(null);
@@ -474,12 +475,12 @@ const CourseManage = () => {
     };
 
     const deleteAnswer = async (answer: AnswerOption) => {
-        if (!window.confirm(`Delete answer "${answer.text}"?`)) return;
+        if (!window.confirm(`Удалить ответ «${answer.text}»?`)) return;
         setIsSaving(true);
         resetMessages();
         try {
             await quizService.deleteAnswer(answer.id);
-            setSuccess('Answer deleted.');
+            setSuccess('Ответ удалён.');
             await reloadSelectedLinkedContent();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -489,31 +490,31 @@ const CourseManage = () => {
     };
 
     if (isLoading) return <Loader />;
-    if (!course) return <EmptyState title="Course not found" variant="error" />;
+    if (!course) return <EmptyState title="Курс не найден" variant="error" />;
 
     return (
         <div className={styles.page}>
             <div className={styles.header}>
                 <div>
                     <h1>{course.title}</h1>
-                    <p>Manage sections, lessons, assignments and quizzes.</p>
+                    <p>Управляйте разделами, уроками, заданиями и тестами.</p>
                 </div>
                 <Link to="/teacher/courses">
-                    <Button type="button" variant="secondary">Back</Button>
+                    <Button type="button" variant="secondary">Назад</Button>
                 </Link>
             </div>
 
-            {error && <EmptyState title="Action failed" description={error} variant="error" />}
+            {error && <EmptyState title="Не удалось выполнить действие" description={error} variant="error" />}
             {success && <p className={styles.success}>{success}</p>}
 
             <div className={styles.columns}>
                 <section className={styles.panel}>
-                    <h2>Sections</h2>
+                    <h2>Разделы</h2>
                     <form className={styles.form} onSubmit={(event) => void saveSection(event)}>
-                        <Input label="Title" value={sectionForm.title} onChange={(event) => setSectionForm({ ...sectionForm, title: event.target.value })} />
-                        <Input label="Description" value={sectionForm.description} onChange={(event) => setSectionForm({ ...sectionForm, description: event.target.value })} />
-                        <Input label="Order" type="number" min={1} value={sectionForm.order} onChange={(event) => setSectionForm({ ...sectionForm, order: Number(event.target.value) })} />
-                        <Button type="submit" isLoading={isSaving}>{editingSectionId ? 'Save section' : 'Add section'}</Button>
+                        <Input label="Название" value={sectionForm.title} onChange={(event) => setSectionForm({ ...sectionForm, title: event.target.value })} />
+                        <Input label="Описание" value={sectionForm.description} onChange={(event) => setSectionForm({ ...sectionForm, description: event.target.value })} />
+                        <Input label="Порядок" type="number" min={1} value={sectionForm.order} onChange={(event) => setSectionForm({ ...sectionForm, order: Number(event.target.value) })} />
+                        <Button type="submit" isLoading={isSaving}>{editingSectionId ? 'Сохранить раздел' : 'Добавить раздел'}</Button>
                     </form>
 
                     <div className={styles.list}>
@@ -523,8 +524,8 @@ const CourseManage = () => {
                                     {section.order}. {section.title}
                                 </button>
                                 <div className={styles.actions}>
-                                    <Button type="button" variant="secondary" onClick={() => editSection(section)}>Edit</Button>
-                                    <Button type="button" variant="danger" onClick={() => void deleteSection(section)}>Delete</Button>
+                                    <Button type="button" variant="secondary" onClick={() => editSection(section)}>Редактировать</Button>
+                                    <Button type="button" variant="danger" onClick={() => void deleteSection(section)}>Удалить</Button>
                                 </div>
                             </div>
                         ))}
@@ -532,54 +533,54 @@ const CourseManage = () => {
                 </section>
 
                 <section className={styles.panel}>
-                    <h2>Lessons</h2>
+                    <h2>Уроки</h2>
                     <form className={styles.form} onSubmit={(event) => void saveLesson(event)}>
                         <label className={styles.field}>
-                            <span>Section</span>
+                            <span>Раздел</span>
                             <select value={selectedSectionId ?? 0} onChange={(event) => setSelectedSectionId(Number(event.target.value) || null)}>
-                                <option value={0}>Select section</option>
+                                <option value={0}>Выберите раздел</option>
                                 {sections.map((section) => (
                                     <option key={section.id} value={section.id}>{section.title}</option>
                                 ))}
                             </select>
                         </label>
-                        <Input label="Title" value={lessonForm.title} onChange={(event) => setLessonForm({ ...lessonForm, title: event.target.value })} />
+                        <Input label="Название" value={lessonForm.title} onChange={(event) => setLessonForm({ ...lessonForm, title: event.target.value })} />
                         <label className={styles.field}>
-                            <span>Type</span>
+                            <span>Тип</span>
                             <select value={lessonForm.type} onChange={(event) => setLessonForm({ ...lessonForm, type: event.target.value as LessonUpsertPayload['type'] })}>
-                                <option value="text">Text</option>
-                                <option value="video">Video</option>
-                                <option value="assignment">Assignment</option>
-                                <option value="quiz">Quiz</option>
-                                <option value="file">File</option>
-                                <option value="project">Project</option>
+                                <option value="text">{LESSON_TYPE_LABELS.text}</option>
+                                <option value="video">{LESSON_TYPE_LABELS.video}</option>
+                                <option value="assignment">{LESSON_TYPE_LABELS.assignment}</option>
+                                <option value="quiz">{LESSON_TYPE_LABELS.quiz}</option>
+                                <option value="file">{LESSON_TYPE_LABELS.file}</option>
+                                <option value="project">{LESSON_TYPE_LABELS.project}</option>
                             </select>
                         </label>
                         <label className={styles.field}>
-                            <span>Content</span>
+                            <span>Содержание</span>
                             <textarea value={lessonForm.content} rows={4} onChange={(event) => setLessonForm({ ...lessonForm, content: event.target.value })} />
                         </label>
-                        <Input label="Video URL" value={lessonForm.video_url} onChange={(event) => setLessonForm({ ...lessonForm, video_url: event.target.value })} />
+                        <Input label="Ссылка на видео" value={lessonForm.video_url} onChange={(event) => setLessonForm({ ...lessonForm, video_url: event.target.value })} />
                         <div className={styles.inline}>
-                            <Input label="Duration" type="number" min={1} value={lessonForm.duration} onChange={(event) => setLessonForm({ ...lessonForm, duration: Number(event.target.value) })} />
-                            <Input label="Order" type="number" min={1} value={lessonForm.order} onChange={(event) => setLessonForm({ ...lessonForm, order: Number(event.target.value) })} />
+                            <Input label="Продолжительность" type="number" min={1} value={lessonForm.duration} onChange={(event) => setLessonForm({ ...lessonForm, duration: Number(event.target.value) })} />
+                            <Input label="Порядок" type="number" min={1} value={lessonForm.order} onChange={(event) => setLessonForm({ ...lessonForm, order: Number(event.target.value) })} />
                             <label className={styles.checkbox}>
                                 <input type="checkbox" checked={lessonForm.is_free} onChange={(event) => setLessonForm({ ...lessonForm, is_free: event.target.checked })} />
-                                Free
+                                Бесплатный урок
                             </label>
                         </div>
-                        <Button type="submit" isLoading={isSaving}>{editingLessonId ? 'Save lesson' : 'Add lesson'}</Button>
+                        <Button type="submit" isLoading={isSaving}>{editingLessonId ? 'Сохранить урок' : 'Добавить урок'}</Button>
                     </form>
 
                     <div className={styles.list}>
                         {allLessons.map((lesson) => (
                             <div key={lesson.id} className={styles.row}>
                                 <button type="button" className={styles.rowButton} onClick={() => setSelectedLessonId(lesson.id)}>
-                                    {lesson.order}. {lesson.title} - {lesson.type}
+                                    {lesson.order}. {lesson.title} - {LESSON_TYPE_LABELS[lesson.type]}
                                 </button>
                                 <div className={styles.actions}>
-                                    <Button type="button" variant="secondary" onClick={() => editLesson(lesson)}>Edit</Button>
-                                    <Button type="button" variant="danger" onClick={() => void deleteLesson(lesson)}>Delete</Button>
+                                    <Button type="button" variant="secondary" onClick={() => editLesson(lesson)}>Редактировать</Button>
+                                    <Button type="button" variant="danger" onClick={() => void deleteLesson(lesson)}>Удалить</Button>
                                 </div>
                             </div>
                         ))}
@@ -588,75 +589,75 @@ const CourseManage = () => {
             </div>
 
             <section className={styles.panel}>
-                <h2>Assignment / Quiz</h2>
+                <h2>Задание / тест</h2>
                 {!selectedLesson ? (
-                    <EmptyState title="Select a lesson" description="Assignment and quiz tools are shown for the selected lesson." />
+                    <EmptyState title="Выберите урок" description="Инструменты задания и теста показываются для выбранного урока." />
                 ) : selectedLesson.type === 'assignment' ? (
                     <form className={styles.form} onSubmit={(event) => void saveAssignment(event)}>
-                        <Input label="Title" value={assignmentForm.title} onChange={(event) => setAssignmentForm({ ...assignmentForm, title: event.target.value })} />
+                        <Input label="Название" value={assignmentForm.title} onChange={(event) => setAssignmentForm({ ...assignmentForm, title: event.target.value })} />
                         <label className={styles.field}>
-                            <span>Description</span>
+                            <span>Описание</span>
                             <textarea value={assignmentForm.description} rows={4} onChange={(event) => setAssignmentForm({ ...assignmentForm, description: event.target.value })} />
                         </label>
                         <label className={styles.field}>
-                            <span>Starter code</span>
+                            <span>Стартовый код</span>
                             <textarea value={assignmentForm.starter_code} rows={4} onChange={(event) => setAssignmentForm({ ...assignmentForm, starter_code: event.target.value })} />
                         </label>
-                        <Input label="Max score" type="number" min={1} value={assignmentForm.max_score} onChange={(event) => setAssignmentForm({ ...assignmentForm, max_score: Number(event.target.value) })} />
+                        <Input label="Максимальная оценка" type="number" min={1} value={assignmentForm.max_score} onChange={(event) => setAssignmentForm({ ...assignmentForm, max_score: Number(event.target.value) })} />
                         <div className={styles.actions}>
-                            <Button type="submit" isLoading={isSaving}>{assignment ? 'Save assignment' : 'Create assignment'}</Button>
+                            <Button type="submit" isLoading={isSaving}>{assignment ? 'Сохранить задание' : 'Создать задание'}</Button>
                             {assignment && (
                                 <Link to={`/teacher/assignments/${assignment.id}/submissions`}>
-                                    <Button type="button" variant="secondary">Review submissions</Button>
+                                    <Button type="button" variant="secondary">Проверить решения</Button>
                                 </Link>
                             )}
-                            {assignment && <Button type="button" variant="danger" onClick={() => void deleteAssignment()}>Delete assignment</Button>}
+                            {assignment && <Button type="button" variant="danger" onClick={() => void deleteAssignment()}>Удалить задание</Button>}
                         </div>
                     </form>
                 ) : selectedLesson.type === 'quiz' ? (
                     <div className={styles.quizGrid}>
                         <form className={styles.form} onSubmit={(event) => void saveQuiz(event)}>
-                            <Input label="Title" value={quizForm.title} onChange={(event) => setQuizForm({ ...quizForm, title: event.target.value })} />
-                            <Input label="Description" value={quizForm.description} onChange={(event) => setQuizForm({ ...quizForm, description: event.target.value })} />
-                            <Input label="Passing score" type="number" min={0} max={100} value={quizForm.passing_score} onChange={(event) => setQuizForm({ ...quizForm, passing_score: Number(event.target.value) })} />
+                            <Input label="Название" value={quizForm.title} onChange={(event) => setQuizForm({ ...quizForm, title: event.target.value })} />
+                            <Input label="Описание" value={quizForm.description} onChange={(event) => setQuizForm({ ...quizForm, description: event.target.value })} />
+                            <Input label="Проходной балл" type="number" min={0} max={100} value={quizForm.passing_score} onChange={(event) => setQuizForm({ ...quizForm, passing_score: Number(event.target.value) })} />
                             <div className={styles.actions}>
-                                <Button type="submit" isLoading={isSaving}>{quiz ? 'Save quiz' : 'Create quiz'}</Button>
-                                {quiz && <Button type="button" variant="danger" onClick={() => void deleteQuiz()}>Delete quiz</Button>}
+                                <Button type="submit" isLoading={isSaving}>{quiz ? 'Сохранить тест' : 'Создать тест'}</Button>
+                                {quiz && <Button type="button" variant="danger" onClick={() => void deleteQuiz()}>Удалить тест</Button>}
                             </div>
                         </form>
 
                         {quiz ? (
                             <div className={styles.quizEditor}>
                                 <form className={styles.form} onSubmit={(event) => void saveQuestion(event)}>
-                                    <h3>{editingQuestionId ? 'Edit question' : 'Add question'}</h3>
-                                    <Input label="Question" value={questionForm.question} onChange={(event) => setQuestionForm({ ...questionForm, question: event.target.value })} />
+                                    <h3>{editingQuestionId ? 'Редактировать вопрос' : 'Добавить вопрос'}</h3>
+                                    <Input label="Вопрос" value={questionForm.question} onChange={(event) => setQuestionForm({ ...questionForm, question: event.target.value })} />
                                     <label className={styles.field}>
-                                        <span>Type</span>
+                                        <span>Тип</span>
                                         <select value={questionForm.type} onChange={(event) => setQuestionForm({ ...questionForm, type: event.target.value as QuestionType })}>
-                                            <option value="single">Single choice</option>
-                                            <option value="multiple">Multiple choice</option>
-                                            <option value="text">Text</option>
+                                            <option value="single">{QUESTION_TYPE_LABELS.single}</option>
+                                            <option value="multiple">{QUESTION_TYPE_LABELS.multiple}</option>
+                                            <option value="text">{QUESTION_TYPE_LABELS.text}</option>
                                         </select>
                                     </label>
                                     <div className={styles.inline}>
-                                        <Input label="Points" type="number" min={1} value={questionForm.points} onChange={(event) => setQuestionForm({ ...questionForm, points: Number(event.target.value) })} />
-                                        <Input label="Order" type="number" min={1} value={questionForm.order} onChange={(event) => setQuestionForm({ ...questionForm, order: Number(event.target.value) })} />
+                                        <Input label="Баллы" type="number" min={1} value={questionForm.points} onChange={(event) => setQuestionForm({ ...questionForm, points: Number(event.target.value) })} />
+                                        <Input label="Порядок" type="number" min={1} value={questionForm.order} onChange={(event) => setQuestionForm({ ...questionForm, order: Number(event.target.value) })} />
                                     </div>
                                     {questionForm.type === 'text' && (
-                                        <Input label="Expected answer" value={questionForm.text_answer} onChange={(event) => setQuestionForm({ ...questionForm, text_answer: event.target.value })} />
+                                        <Input label="Ожидаемый ответ" value={questionForm.text_answer} onChange={(event) => setQuestionForm({ ...questionForm, text_answer: event.target.value })} />
                                     )}
                                     <div className={styles.actions}>
-                                        <Button type="submit" isLoading={isSaving}>{editingQuestionId ? 'Save question' : 'Add question'}</Button>
+                                        <Button type="submit" isLoading={isSaving}>{editingQuestionId ? 'Сохранить вопрос' : 'Добавить вопрос'}</Button>
                                         {editingQuestionId && (
                                             <Button type="button" variant="secondary" onClick={() => { setEditingQuestionId(null); setQuestionForm(EMPTY_QUESTION); }}>
-                                                Cancel
+                                                Отмена
                                             </Button>
                                         )}
                                     </div>
                                 </form>
 
                                 {quiz.questions.length === 0 ? (
-                                    <EmptyState title="No questions" />
+                                    <EmptyState title="Вопросов пока нет" />
                                 ) : quiz.questions.map((question) => {
                                     const answerForm = answerForms[question.id] ?? EMPTY_ANSWER;
                                     const isEditingThisAnswer = editingAnswerQuestionId === question.id;
@@ -665,11 +666,11 @@ const CourseManage = () => {
                                             <div className={styles.questionHeader}>
                                                 <div>
                                                     <h3>{question.order}. {question.question}</h3>
-                                                    <p>{question.type} | {question.points} points</p>
+                                                    <p>{QUESTION_TYPE_LABELS[question.type]} | {question.points} балл(ов)</p>
                                                 </div>
                                                 <div className={styles.actions}>
-                                                    <Button type="button" variant="secondary" onClick={() => editQuestion(question)}>Edit</Button>
-                                                    <Button type="button" variant="danger" onClick={() => void deleteQuestion(question)}>Delete</Button>
+                                                    <Button type="button" variant="secondary" onClick={() => editQuestion(question)}>Редактировать</Button>
+                                                    <Button type="button" variant="danger" onClick={() => void deleteQuestion(question)}>Удалить</Button>
                                                 </div>
                                             </div>
 
@@ -679,21 +680,21 @@ const CourseManage = () => {
                                                         {question.answers.map((answer) => (
                                                             <div key={answer.id} className={styles.answerRow}>
                                                                 <span>{answer.text}</span>
-                                                                <span>{answer.is_correct ? 'Correct' : 'Incorrect'}</span>
+                                                                <span>{answer.is_correct ? 'Правильный' : 'Неправильный'}</span>
                                                                 <div className={styles.actions}>
-                                                                    <Button type="button" variant="secondary" onClick={() => editAnswer(question.id, answer)}>Edit</Button>
-                                                                    <Button type="button" variant="danger" onClick={() => void deleteAnswer(answer)}>Delete</Button>
+                                                                    <Button type="button" variant="secondary" onClick={() => editAnswer(question.id, answer)}>Редактировать</Button>
+                                                                    <Button type="button" variant="danger" onClick={() => void deleteAnswer(answer)}>Удалить</Button>
                                                                 </div>
                                                             </div>
                                                         ))}
                                                     </div>
                                                     <form className={styles.answerForm} onSubmit={(event) => void saveAnswer(event, question.id)}>
-                                                        <Input label={isEditingThisAnswer ? 'Edit answer' : 'New answer'} value={answerForm.text} onChange={(event) => updateAnswerForm(question.id, { text: event.target.value })} />
+                                                        <Input label={isEditingThisAnswer ? 'Редактировать ответ' : 'Новый ответ'} value={answerForm.text} onChange={(event) => updateAnswerForm(question.id, { text: event.target.value })} />
                                                         <label className={styles.checkbox}>
                                                             <input type="checkbox" checked={answerForm.is_correct} onChange={(event) => updateAnswerForm(question.id, { is_correct: event.target.checked })} />
-                                                            Correct
+                                                            Правильный ответ
                                                         </label>
-                                                        <Button type="submit" isLoading={isSaving}>{isEditingThisAnswer ? 'Save answer' : 'Add answer'}</Button>
+                                                        <Button type="submit" isLoading={isSaving}>{isEditingThisAnswer ? 'Сохранить ответ' : 'Добавить ответ'}</Button>
                                                     </form>
                                                 </>
                                             )}
@@ -702,11 +703,11 @@ const CourseManage = () => {
                                 })}
                             </div>
                         ) : (
-                            <EmptyState title="Create quiz first" />
+                            <EmptyState title="Сначала создайте тест" />
                         )}
                     </div>
                 ) : (
-                    <EmptyState title="No linked CRUD for this lesson type" description="Choose an assignment or quiz lesson." />
+                    <EmptyState title="Для этого типа урока нет CRUD" description="Выберите урок с заданием или тестом." />
                 )}
             </section>
         </div>

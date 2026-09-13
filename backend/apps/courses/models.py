@@ -29,7 +29,7 @@ class Course(models.Model):
         BEGINNER = 'beginner', 'Начинающий'
         JUNIOR = 'junior', 'Junior'
         MIDDLE = 'middle', 'Middle'
-        ADVANCED = 'advanced', 'Advanced'
+        ADVANCED = 'advanced', 'Продвинутый'
 
     class Status(models.TextChoices):
         DRAFT = 'draft', 'Черновик'

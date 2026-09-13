@@ -51,7 +51,7 @@ describe('AdminUsers', () => {
 
         render(<MemoryRouter><AdminUsersList /></MemoryRouter>);
         await screen.findByText('admin@test.com');
-        await user.click(screen.getByRole('button', { name: 'Block' }));
+        await user.click(screen.getByRole('button', { name: 'Заблокировать' }));
 
         await waitFor(() => {
             expect(adminService.updateUser).toHaveBeenCalledWith(1, { is_active: false });
@@ -71,8 +71,8 @@ describe('AdminUsers', () => {
             </MemoryRouter>,
         );
         await screen.findByText('admin@test.com');
-        await user.selectOptions(screen.getByLabelText('Role'), 'teacher');
-        await user.click(screen.getByRole('button', { name: 'Save user' }));
+        await user.selectOptions(screen.getByLabelText('Роль'), 'teacher');
+        await user.click(screen.getByRole('button', { name: 'Сохранить пользователя' }));
 
         await waitFor(() => {
             expect(adminService.updateUser).toHaveBeenCalledWith('1', expect.objectContaining({ role: 'teacher' }));

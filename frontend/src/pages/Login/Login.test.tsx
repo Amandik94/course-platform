@@ -27,7 +27,7 @@ describe('Login page', () => {
 
     it('renders email and password fields', () => {
         renderLogin();
-        expect(screen.getByLabelText('Email')).toBeInTheDocument();
+        expect(screen.getByLabelText('Электронная почта')).toBeInTheDocument();
         expect(screen.getByLabelText('Пароль')).toBeInTheDocument();
     });
 
@@ -43,7 +43,7 @@ describe('Login page', () => {
         });
 
         renderLogin();
-        await user.type(screen.getByLabelText('Email'), 'test@test.com');
+        await user.type(screen.getByLabelText('Электронная почта'), 'test@test.com');
         await user.type(screen.getByLabelText('Пароль'), 'password123');
         await user.click(screen.getByRole('button', { name: 'Войти' }));
 
@@ -64,7 +64,7 @@ describe('Login page', () => {
         });
 
         renderLogin();
-        await user.type(screen.getByLabelText('Email'), 'test@test.com');
+        await user.type(screen.getByLabelText('Электронная почта'), 'test@test.com');
         await user.type(screen.getByLabelText('Пароль'), 'wrongpass');
         await user.click(screen.getByRole('button', { name: 'Войти' }));
 

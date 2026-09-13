@@ -10,10 +10,8 @@ import type { CourseDetail as CourseDetailType, Section } from '../../types/cour
 import styles from './CourseDetail.module.css';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 import { useToast } from '../../components/Toast/useToast';
-
-const LEVEL_LABELS: Record<string, string> = {
-    beginner: 'Начинающий', junior: 'Junior', middle: 'Middle', advanced: 'Advanced',
-};
+import CourseReviews from '../../features/reviews/CourseReviews';
+import { COURSE_LEVEL_LABELS, pluralizeRu } from '../../utils/labels';
 
 const CourseDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -94,10 +92,12 @@ const CourseDetail = () => {
 
                 <div className={styles.info}>
                     <div className={styles.badges}>
-                        <span className={styles.badge}>{LEVEL_LABELS[course.level]}</span>
+                        <span className={styles.badge}>{COURSE_LEVEL_LABELS[course.level]}</span>
                         <span className={styles.badge}>{course.category.name}</span>
                         <span className={styles.badge}>{course.duration} ч</span>
-                        <span className={styles.badge}>{course.lessons_count} уроков</span>
+                        <span className={styles.badge}>
+                            {course.lessons_count} {pluralizeRu(course.lessons_count, ['урок', 'урока', 'уроков'])}
+                        </span>
                     </div>
 
                     <h1>{course.title}</h1>
@@ -133,6 +133,8 @@ const CourseDetail = () => {
                 ))}
                 {sections.length === 0 && <p>Программа курса пока не наполнена.</p>}
             </div>
+
+            <CourseReviews course={course} onCourseUpdated={setCourse} />
         </div>
     );
 };

@@ -18,7 +18,7 @@ class StudentDashboardView(APIView):
     """GET /api/v1/dashboard/student/"""
     permission_classes = [permissions.IsAuthenticated, IsStudent]
 
-    @extend_schema(responses={200: StudentDashboardSerializer}, summary='Дашборд студента', tags=['Dashboard'])
+    @extend_schema(responses={200: StudentDashboardSerializer}, summary='Дашборд студента', tags=['Панель управления'])
     def get(self, request):
         user = request.user
         enrollments = Enrollment.objects.filter(student=user)
@@ -49,7 +49,7 @@ class TeacherDashboardView(APIView):
     """GET /api/v1/dashboard/teacher/"""
     permission_classes = [permissions.IsAuthenticated, IsTeacher]
 
-    @extend_schema(responses={200: TeacherDashboardSerializer}, summary='Дашборд преподавателя', tags=['Dashboard'])
+    @extend_schema(responses={200: TeacherDashboardSerializer}, summary='Дашборд преподавателя', tags=['Панель управления'])
     def get(self, request):
         user = request.user
         courses = Course.objects.filter(teacher=user).annotate(
@@ -77,7 +77,7 @@ class AdminDashboardView(APIView):
     """GET /api/v1/dashboard/admin/"""
     permission_classes = [permissions.IsAuthenticated, IsAdmin]
 
-    @extend_schema(responses={200: AdminDashboardSerializer}, summary='Дашборд администратора', tags=['Dashboard'])
+    @extend_schema(responses={200: AdminDashboardSerializer}, summary='Дашборд администратора', tags=['Панель управления'])
     def get(self, request):
         data = {
             'users_count': User.objects.count(),

@@ -7,6 +7,7 @@ import { courseService } from '../../services/courseService';
 import { useAuthStore } from '../../store/authStore';
 import type { CourseListItem } from '../../types/course';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
+import { COURSE_LEVEL_LABELS, COURSE_STATUS_LABELS, pluralizeRu } from '../../utils/labels';
 import styles from './TeacherCourses.module.css';
 
 const TeacherCourses = () => {
@@ -37,7 +38,7 @@ const TeacherCourses = () => {
     }, []);
 
     const handleDelete = async (course: CourseListItem) => {
-        const confirmed = window.confirm(`Delete course "${course.title}"?`);
+        const confirmed = window.confirm(`Удалить курс «${course.title}»?`);
         if (!confirmed) return;
 
         setError('');
@@ -45,7 +46,7 @@ const TeacherCourses = () => {
         try {
             await courseService.deleteCourse(course.id);
             setCourses((items) => items.filter((item) => item.id !== course.id));
-            setSuccess('Course deleted.');
+            setSuccess('Курс удалён.');
         } catch (err) {
             setError(getApiErrorMessage(err));
         }
@@ -57,41 +58,41 @@ const TeacherCourses = () => {
         <div className={styles.page}>
             <div className={styles.header}>
                 <div>
-                    <h1>Teacher Courses</h1>
-                    <p>Manage your own courses, sections, lessons, assignments and quizzes.</p>
+                    <h1>Мои курсы</h1>
+                    <p>Управление курсами, разделами, уроками, заданиями и тестами.</p>
                 </div>
                 <Link to="/teacher/courses/new">
-                    <Button type="button">New course</Button>
+                    <Button type="button">Новый курс</Button>
                 </Link>
             </div>
 
-            {error && <EmptyState title="Could not load courses" description={error} variant="error" />}
+            {error && <EmptyState title="Не удалось загрузить курсы" description={error} variant="error" />}
             {success && <p className={styles.success}>{success}</p>}
 
             {teacherCourses.length === 0 && !error ? (
-                <EmptyState title="No courses yet" description="Create your first course to start building content." />
+                <EmptyState title="Курсов пока нет" description="Создайте первый курс, чтобы начать наполнять обучение." />
             ) : (
                 <div className={styles.grid}>
                     {teacherCourses.map((course) => (
                         <article key={course.id} className={styles.card}>
                             <div>
-                                <p className={styles.meta}>{course.category.name} - {course.level}</p>
+                                <p className={styles.meta}>{course.category.name} - {COURSE_LEVEL_LABELS[course.level]}</p>
                                 <h2>{course.title}</h2>
                                 <p>{course.short_description}</p>
                             </div>
                             <div className={styles.footer}>
-                                <span className={styles.status}>{course.status}</span>
-                                <span>{course.lessons_count} lessons</span>
+                                <span className={styles.status}>{COURSE_STATUS_LABELS[course.status]}</span>
+                                <span>{course.lessons_count} {pluralizeRu(course.lessons_count, ['урок', 'урока', 'уроков'])}</span>
                             </div>
                             <div className={styles.actions}>
                                 <Link to={`/teacher/courses/${course.id}/manage`}>
-                                    <Button type="button" variant="secondary">Manage</Button>
+                                    <Button type="button" variant="secondary">Управлять</Button>
                                 </Link>
                                 <Link to={`/teacher/courses/${course.id}/edit`}>
-                                    <Button type="button" variant="secondary">Edit</Button>
+                                    <Button type="button" variant="secondary">Редактировать</Button>
                                 </Link>
                                 <Button type="button" variant="danger" onClick={() => void handleDelete(course)}>
-                                    Delete
+                                    Удалить
                                 </Button>
                             </div>
                         </article>

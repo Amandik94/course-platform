@@ -25,6 +25,7 @@ import AdminCategories from '../../pages/AdminCategories/AdminCategories';
 import { AdminUserDetail, AdminUsersList } from '../../pages/AdminUsers/AdminUsers';
 import AdminBlocked from '../../pages/AdminBlocked/AdminBlocked';
 import TeacherSubmissions from '../../pages/TeacherSubmissions/TeacherSubmissions';
+import NotificationsPage from '../../pages/Notifications/NotificationsPage';
 
 export const router = createBrowserRouter([
     {
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
             { path: 'quiz/:id', element: <ProtectedRoute><QuizPage /></ProtectedRoute> },
             { path: 'assignment/:id', element: <ProtectedRoute><AssignmentPage /></ProtectedRoute> },
             { path: 'certificates', element: <ProtectedRoute><Certificates /></ProtectedRoute> },
+            { path: 'notifications', element: <ProtectedRoute><NotificationsPage /></ProtectedRoute> },
             { path: 'dashboard', element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
             { path: 'dashboard/teacher', element: <RoleRoute allowedRoles={['teacher', 'admin']}><Dashboard /></RoleRoute> },
             { path: 'teacher/courses', element: <RoleRoute allowedRoles={['teacher', 'admin']}><TeacherCourses /></RoleRoute> },

@@ -8,6 +8,7 @@ import Pagination from '../../components/Pagination/Pagination';
 import { adminService } from '../../services/adminService';
 import type { AdminUser, AdminUserFilters, AdminUserUpdatePayload, UserRole } from '../../types/user';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
+import { ROLE_LABELS } from '../../utils/labels';
 import styles from './AdminUsers.module.css';
 
 const roleOptions: UserRole[] = ['student', 'teacher', 'admin'];
@@ -53,7 +54,7 @@ export const AdminUsersList = () => {
         try {
             const updated = await adminService.updateUser(user.id, { is_active: !user.is_active });
             setUsers((items) => items.map((item) => (item.id === updated.id ? updated : item)));
-            setSuccess(updated.is_active ? 'User unblocked.' : 'User blocked.');
+            setSuccess(updated.is_active ? 'Пользователь разблокирован.' : 'Пользователь заблокирован.');
         } catch (err) {
             setError(getApiErrorMessage(err));
         } finally {
@@ -67,60 +68,60 @@ export const AdminUsersList = () => {
         <div className={styles.page}>
             <div className={styles.header}>
                 <div>
-                    <h1>Admin Users</h1>
-                    <p>Review accounts, roles and access state.</p>
+                    <h1>Пользователи</h1>
+                    <p>Управление аккаунтами, ролями и доступом.</p>
                 </div>
                 <Link to="/dashboard/admin">
-                    <Button type="button" variant="secondary">Dashboard</Button>
+                    <Button type="button" variant="secondary">Панель управления</Button>
                 </Link>
             </div>
 
             <div className={styles.filters}>
                 <Input
-                    label="Search"
+                    label="Поиск"
                     value={filters.search ?? ''}
                     onChange={(event) => setFilter({ search: event.target.value })}
                 />
                 <label className={styles.field}>
-                    <span>Role</span>
+                    <span>Роль</span>
                     <select value={filters.role ?? ''} onChange={(event) => setFilter({ role: event.target.value as UserRole | '' })}>
-                        <option value="">All roles</option>
-                        {roleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
+                        <option value="">Все роли</option>
+                        {roleOptions.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}
                     </select>
                 </label>
                 <label className={styles.field}>
-                    <span>Status</span>
+                    <span>Статус</span>
                     <select value={filters.is_active ?? ''} onChange={(event) => setFilter({ is_active: event.target.value })}>
-                        <option value="">All</option>
-                        <option value="true">Active</option>
-                        <option value="false">Blocked</option>
+                        <option value="">Все</option>
+                        <option value="true">Активен</option>
+                        <option value="false">Заблокирован</option>
                     </select>
                 </label>
             </div>
 
-            {error && <EmptyState title="Admin users failed" description={error} variant="error" />}
+            {error && <EmptyState title="Не удалось загрузить пользователей" description={error} variant="error" />}
             {success && <p className={styles.success}>{success}</p>}
 
             {users.length === 0 && !error ? (
-                <EmptyState title="No users" />
+                <EmptyState title="Пользователей нет" />
             ) : (
                 <div className={styles.table}>
                     <div className={styles.tableHead}>
-                        <span>User</span>
-                        <span>Name</span>
-                        <span>Role</span>
-                        <span>Status</span>
-                        <span>Actions</span>
+                        <span>Пользователь</span>
+                        <span>Имя</span>
+                        <span>Роль</span>
+                        <span>Статус</span>
+                        <span>Действия</span>
                     </div>
                     {users.map((user) => (
                         <div key={user.id} className={styles.tableRow}>
                             <span>{user.email}</span>
                             <span>{user.full_name || '-'}</span>
-                            <span>{user.role}</span>
-                            <span>{user.is_active ? 'Active' : 'Blocked'}</span>
+                            <span>{ROLE_LABELS[user.role]}</span>
+                            <span>{user.is_active ? 'Активен' : 'Заблокирован'}</span>
                             <div className={styles.actions}>
                                 <Link to={`/admin/users/${user.id}`}>
-                                    <Button type="button" variant="secondary">Open</Button>
+                                    <Button type="button" variant="secondary">Открыть</Button>
                                 </Link>
                                 <Button
                                     type="button"
@@ -128,7 +129,7 @@ export const AdminUsersList = () => {
                                     disabled={isSaving}
                                     onClick={() => void toggleActive(user)}
                                 >
-                                    {user.is_active ? 'Block' : 'Unblock'}
+                                    {user.is_active ? 'Заблокировать' : 'Разблокировать'}
                                 </Button>
                             </div>
                         </div>
@@ -182,7 +183,7 @@ export const AdminUserDetail = () => {
         try {
             const updated = await adminService.updateUser(id, form);
             setUser(updated);
-            setSuccess('User updated.');
+            setSuccess('Пользователь обновлён.');
         } catch (err) {
             setError(getApiErrorMessage(err));
         } finally {
@@ -191,43 +192,43 @@ export const AdminUserDetail = () => {
     };
 
     if (isLoading) return <Loader />;
-    if (!user) return <EmptyState title="User not found" variant="error" />;
+    if (!user) return <EmptyState title="Пользователь не найден" variant="error" />;
 
     return (
         <div className={styles.page}>
             <div className={styles.header}>
                 <div>
                     <h1>{user.email}</h1>
-                    <p>Manage safe account fields.</p>
+                    <p>Редактирование безопасных полей аккаунта.</p>
                 </div>
                 <Link to="/admin/users">
-                    <Button type="button" variant="secondary">Back</Button>
+                    <Button type="button" variant="secondary">Назад</Button>
                 </Link>
             </div>
 
-            {error && <EmptyState title="Update failed" description={error} variant="error" />}
+            {error && <EmptyState title="Не удалось обновить пользователя" description={error} variant="error" />}
             {success && <p className={styles.success}>{success}</p>}
 
             <section className={styles.panel}>
                 <form className={styles.form} onSubmit={(event) => void submit(event)}>
-                    <Input label="First name" value={form.first_name ?? ''} onChange={(event) => setForm({ ...form, first_name: event.target.value })} />
-                    <Input label="Last name" value={form.last_name ?? ''} onChange={(event) => setForm({ ...form, last_name: event.target.value })} />
+                    <Input label="Имя" value={form.first_name ?? ''} onChange={(event) => setForm({ ...form, first_name: event.target.value })} />
+                    <Input label="Фамилия" value={form.last_name ?? ''} onChange={(event) => setForm({ ...form, last_name: event.target.value })} />
                     <label className={styles.field}>
-                        <span>Role</span>
+                        <span>Роль</span>
                         <select value={form.role ?? 'student'} onChange={(event) => setForm({ ...form, role: event.target.value as UserRole })}>
-                            {roleOptions.map((role) => <option key={role} value={role}>{role}</option>)}
+                            {roleOptions.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}
                         </select>
                     </label>
                     <label className={styles.field}>
-                        <span>Status</span>
+                        <span>Статус</span>
                         <select value={String(form.is_active ?? true)} onChange={(event) => setForm({ ...form, is_active: event.target.value === 'true' })}>
-                            <option value="true">Active</option>
-                            <option value="false">Blocked</option>
+                            <option value="true">Активен</option>
+                            <option value="false">Заблокирован</option>
                         </select>
                     </label>
-                    <p className={styles.muted}>Staff and superuser flags are protected by backend and cannot be edited here.</p>
+                    <p className={styles.muted}>Флаги staff и superuser защищены backend и не редактируются на этой странице.</p>
                     <div className={styles.formActions}>
-                        <Button type="submit" isLoading={isSaving}>Save user</Button>
+                        <Button type="submit" isLoading={isSaving}>Сохранить пользователя</Button>
                     </div>
                 </form>
             </section>

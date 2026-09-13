@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 
 from apps.enrollments.models import Enrollment
 from apps.courses.access import can_access_course_content
+from apps.notifications.models import Notification
+from apps.notifications.services import create_notification
 from .models import Answer, Question, Quiz, QuizAttempt
 from .permissions import IsQuizTeacherOwner
 from .serializers import (
@@ -17,7 +19,7 @@ from .serializers import QuizCreateSerializer, QuestionCreateSerializer, AnswerC
 from drf_spectacular.utils import extend_schema_view, extend_schema
 
 @extend_schema_view(
-    get=extend_schema(tags=['Quizzes'], summary='Детали теста'),
+    get=extend_schema(tags=['Тесты'], summary='Детали теста'),
 )
 
 class QuizDetailView(generics.RetrieveAPIView):
@@ -33,7 +35,7 @@ class QuizDetailView(generics.RetrieveAPIView):
     def get_object(self):
         quiz = super().get_object()
         if not can_access_course_content(self.request.user, quiz.lesson.section.course):
-            raise PermissionDenied('You do not have access to this quiz.')
+            raise PermissionDenied('У вас нет доступа к этому тесту.')
         return quiz
 
     def get_serializer_class(self):
@@ -45,7 +47,7 @@ class QuizDetailView(generics.RetrieveAPIView):
         return QuizSerializer if is_owner else QuizPublicSerializer
 
 @extend_schema_view(
-    post=extend_schema(tags=['Quizzes'], summary='Отправить ответы на тест'),
+    post=extend_schema(tags=['Тесты'], summary='Отправить ответы на тест'),
 )
 
 class SubmitQuizView(APIView):
@@ -112,6 +114,13 @@ class SubmitQuizView(APIView):
             quiz=quiz, student=request.user, score=score_percent,
             passed=passed, answers_snapshot=snapshot,
         )
+        create_notification(
+            user=request.user,
+            type=Notification.Type.QUIZ,
+            title='Результат теста',
+            message=f'Ваш результат по тесту «{quiz.title}»: {score_percent}%.',
+            link=f'/quiz/{quiz.id}',
+        )
         return Response(QuizAttemptResultSerializer(attempt).data, status=status.HTTP_201_CREATED)
 
     @staticmethod
@@ -139,7 +148,7 @@ class SubmitQuizView(APIView):
     
 
 @extend_schema_view(
-    post=extend_schema(tags=['Quizzes'], summary='Создать тест'),
+    post=extend_schema(tags=['Тесты'], summary='Создать тест'),
 )
     
 class QuizCreateView(generics.CreateAPIView):
@@ -156,9 +165,9 @@ class QuizCreateView(generics.CreateAPIView):
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Quizzes'], summary='Retrieve quiz for management'),
-    patch=extend_schema(tags=['Quizzes'], summary='Update quiz'),
-    delete=extend_schema(tags=['Quizzes'], summary='Delete quiz'),
+    get=extend_schema(tags=['Тесты'], summary='Получить тест для управления'),
+    patch=extend_schema(tags=['Тесты'], summary='Обновить тест'),
+    delete=extend_schema(tags=['Тесты'], summary='Удалить тест'),
 )
 class QuizManageView(generics.RetrieveUpdateDestroyAPIView):
     """GET/PATCH/DELETE /api/v1/quizzes/{id}/manage/."""
@@ -171,12 +180,12 @@ class QuizManageView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         if instance.attempts.exists():
             raise ValidationError({
-                'detail': 'Cannot delete a quiz that already has student attempts.'
+                'detail': 'Нельзя удалить тест, по которому уже есть попытки студентов.'
             })
         instance.delete()
 
 @extend_schema_view(
-    post=extend_schema(tags=['Quizzes'], summary='Создать вопрос'),
+    post=extend_schema(tags=['Тесты'], summary='Создать ответ'),
 )
 
 class QuestionCreateView(generics.CreateAPIView):
@@ -192,7 +201,7 @@ class QuestionCreateView(generics.CreateAPIView):
         serializer.save(quiz=quiz)
 
 @extend_schema_view(
-    post=extend_schema(tags=['Quizzes'], summary='Создать вопрос'),
+    post=extend_schema(tags=['Тесты'], summary='Создать вопрос'),
 )
 
 class AnswerCreateView(generics.CreateAPIView):
@@ -213,8 +222,8 @@ class AnswerCreateView(generics.CreateAPIView):
         serializer.save(question=question)
 
 @extend_schema_view(
-    patch=extend_schema(tags=['Quizzes'], summary='Обновить вопрос'),
-    delete=extend_schema(tags=['Quizzes'], summary='Удалить вопрос'),
+    patch=extend_schema(tags=['Тесты'], summary='Обновить ответ'),
+    delete=extend_schema(tags=['Тесты'], summary='Удалить ответ'),
 )
 
 class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -224,8 +233,8 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = QuestionCreateSerializer
 
 @extend_schema_view(
-    patch=extend_schema(tags=['Quizzes'], summary='Обновить вопрос'),
-    delete=extend_schema(tags=['Quizzes'], summary='Удалить вопрос'),
+    patch=extend_schema(tags=['Тесты'], summary='Обновить вопрос'),
+    delete=extend_schema(tags=['Тесты'], summary='Удалить вопрос'),
 )
 
 class AnswerDetailView(generics.RetrieveUpdateDestroyAPIView):

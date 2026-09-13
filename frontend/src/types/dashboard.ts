@@ -1,3 +1,5 @@
+import type { CourseStatus } from './course';
+
 export interface QuizResultItem {
     quiz_title: string;
     score: number;
@@ -17,7 +19,7 @@ export interface TeacherDashboardCourse {
     id: number;
     title: string;
     students_count: number;
-    status: string;
+    status: CourseStatus;
 }
 
 export interface TeacherDashboard {

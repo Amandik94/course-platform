@@ -1,13 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { CourseListItem } from '../../types/course';
+import { COURSE_LEVEL_LABELS, pluralizeRu } from '../../utils/labels';
 import styles from './CourseCard.module.css';
-
-const LEVEL_LABELS: Record<string, string> = {
-    beginner: 'Начинающий',
-    junior: 'Junior',
-    middle: 'Middle',
-    advanced: 'Advanced',
-};
 
 const LEVEL_COLOR_VAR: Record<string, string> = {
     beginner: 'var(--color-level-beginner)',
@@ -34,15 +28,25 @@ const CourseCard = ({ course }: CourseCardProps) => {
                     className={styles.levelBadge}
                     style={{ backgroundColor: LEVEL_COLOR_VAR[course.level] }}
                 >
-                    {LEVEL_LABELS[course.level]}
+                    {COURSE_LEVEL_LABELS[course.level]}
                 </span>
 
                 <h3 className={styles.title}>{course.title}</h3>
                 <p className={styles.description}>{course.short_description}</p>
 
+                <div className={styles.rating}>
+                    {course.reviews_count > 0 ? (
+                        <span>★ {course.average_rating.toFixed(1)} ({course.reviews_count})</span>
+                    ) : (
+                        <span>Нет отзывов</span>
+                    )}
+                </div>
+
                 <div className={styles.meta}>
                     <span>{course.teacher_name}</span>
-                    <span>{course.lessons_count} уроков · {course.duration} ч</span>
+                    <span>
+                        {course.lessons_count} {pluralizeRu(course.lessons_count, ['урок', 'урока', 'уроков'])} · {course.duration} ч
+                    </span>
                 </div>
             </div>
         </Link>

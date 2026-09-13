@@ -61,10 +61,10 @@ describe('TeacherSubmissions', () => {
         );
 
         expect(await screen.findByText('Student One')).toBeInTheDocument();
-        await user.selectOptions(screen.getByLabelText('Status'), 'accepted');
-        await user.type(screen.getByLabelText('Score / 100'), '95');
-        await user.type(screen.getByLabelText('Comment'), 'Good');
-        await user.click(screen.getByRole('button', { name: 'Save' }));
+        await user.selectOptions(screen.getByLabelText('Статус'), 'accepted');
+        await user.type(screen.getByLabelText('Оценка / 100'), '95');
+        await user.type(screen.getByLabelText('Комментарий'), 'Good');
+        await user.click(screen.getByRole('button', { name: 'Сохранить' }));
 
         await waitFor(() => {
             expect(assignmentService.reviewSubmission).toHaveBeenCalledWith(20, {

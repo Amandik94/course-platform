@@ -20,7 +20,7 @@ from .serializers import (
 
 
 @extend_schema_view(
-    post=extend_schema(tags=['Users'], summary='Зарегистрироваться'),
+    post=extend_schema(tags=['Пользователи'], summary='Зарегистрироваться'),
 )
 class RegisterView(generics.CreateAPIView):
     """POST /api/v1/auth/register/"""
@@ -44,7 +44,7 @@ class RegisterView(generics.CreateAPIView):
         )
 
 @extend_schema_view(
-    post=extend_schema(tags=['Users'], summary='Войти в систему'),
+    post=extend_schema(tags=['Пользователи'], summary='Войти в систему'),
 )
 class LoginView(APIView):
     """POST /api/v1/auth/login/"""
@@ -71,7 +71,7 @@ class LoginView(APIView):
         })
 
 @extend_schema_view(
-    post=extend_schema(tags=['Users'], summary='Выйти из системы'),
+    post=extend_schema(tags=['Пользователи'], summary='Выйти из системы'),
 )
 class LogoutView(APIView):
     """
@@ -102,8 +102,8 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_205_RESET_CONTENT)
 
 @extend_schema_view(
-    get=extend_schema(tags=['Users'], summary='Мой профиль'),
-    patch=extend_schema(tags=['Users'], summary='Обновить профиль'),
+    get=extend_schema(tags=['Пользователи'], summary='Мой профиль'),
+    patch=extend_schema(tags=['Пользователи'], summary='Обновить профиль'),
 )
 class MeView(generics.RetrieveUpdateAPIView):
     """
@@ -118,13 +118,13 @@ class MeView(generics.RetrieveUpdateAPIView):
 
 
 class ScopedTokenRefreshView(TokenRefreshView):
-    """Token refresh endpoint with its own throttle scope."""
+    """Endpoint обновления токена с отдельным throttle scope."""
 
     throttle_scope = 'token_refresh'
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Admin'], summary='List users'),
+    get=extend_schema(tags=['Администрирование'], summary='Список пользователей'),
 )
 class AdminUserListView(generics.ListAPIView):
     """GET /api/v1/admin/users/."""
@@ -153,8 +153,8 @@ class AdminUserListView(generics.ListAPIView):
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Admin'], summary='Retrieve user'),
-    patch=extend_schema(tags=['Admin'], summary='Update user'),
+    get=extend_schema(tags=['Администрирование'], summary='Получить пользователя'),
+    patch=extend_schema(tags=['Администрирование'], summary='Обновить пользователя'),
 )
 class AdminUserDetailView(generics.RetrieveUpdateAPIView):
     """GET/PATCH /api/v1/admin/users/{id}/."""

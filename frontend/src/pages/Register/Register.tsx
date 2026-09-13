@@ -47,7 +47,7 @@ const Register = () => {
                         required
                     />
                     <Input
-                        label="Email"
+                        label="Электронная почта"
                         type="email"
                         name="email"
                         value={form.email}

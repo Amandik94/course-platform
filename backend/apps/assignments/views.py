@@ -5,6 +5,8 @@ from rest_framework.views import APIView
 
 from apps.courses.access import can_access_course_content
 from apps.enrollments.models import Enrollment
+from apps.notifications.models import Notification
+from apps.notifications.services import create_notification
 from .models import Assignment, AssignmentSubmission
 from apps.lessons.models import Lesson
 from .permissions import IsAssignmentTeacherOwner
@@ -19,7 +21,7 @@ from rest_framework import filters
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Assignments'], summary='Условие задания'),
+    get=extend_schema(tags=['Задания'], summary='Условие задания'),
 )
 class AssignmentDetailView(generics.RetrieveAPIView):
     """GET /api/v1/assignments/{id}/ — условие задания"""
@@ -32,11 +34,11 @@ class AssignmentDetailView(generics.RetrieveAPIView):
     def get_object(self):
         assignment = super().get_object()
         if not can_access_course_content(self.request.user, assignment.lesson.section.course):
-            raise PermissionDenied('You do not have access to this assignment.')
+            raise PermissionDenied('У вас нет доступа к этому заданию.')
         return assignment
 
 @extend_schema_view(
-    post=extend_schema(tags=['Assignments'], summary='Отправить решение задания'),
+    post=extend_schema(tags=['Задания'], summary='Отправить решение задания'),
 )
 
 class SubmitAssignmentView(APIView):
@@ -81,10 +83,17 @@ class SubmitAssignmentView(APIView):
             },
         )
         response_status = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        create_notification(
+            user=course.teacher,
+            type=Notification.Type.SUBMISSION,
+            title='Новое решение задания',
+            message=f'{request.user.full_name or request.user.email} отправил(а) решение задания «{assignment.title}».',
+            link=f'/teacher/assignments/{assignment.id}/submissions',
+        )
         return Response(AssignmentSubmissionSerializer(submission).data, status=response_status)
 
 @extend_schema_view(
-    get=extend_schema(tags=['Assignments'], summary='Список решений студентов'),
+    get=extend_schema(tags=['Задания'], summary='Список решений студентов'),
 )
 
 class AssignmentSubmissionsListView(generics.ListAPIView):
@@ -106,7 +115,7 @@ class AssignmentSubmissionsListView(generics.ListAPIView):
         ).select_related('student', 'assignment')
 
 @extend_schema_view(
-    patch=extend_schema(tags=['Assignments'], summary='Проверить решение задания'),
+    patch=extend_schema(tags=['Задания'], summary='Проверить решение задания'),
 )
 
 class SubmissionReviewView(generics.UpdateAPIView):
@@ -117,9 +126,28 @@ class SubmissionReviewView(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsAssignmentTeacherOwner]
     queryset = AssignmentSubmission.objects.select_related('assignment__lesson__section__course')
     serializer_class = SubmissionReviewSerializer
+
+    def perform_update(self, serializer):
+        submission = serializer.save()
+        assignment = submission.assignment
+        if submission.status == AssignmentSubmission.Status.REVISION:
+            title = 'Задание отправлено на доработку'
+            message = f'Задание «{assignment.title}» нужно доработать.'
+        else:
+            title = 'Задание проверено'
+            score = 'не выставлена' if submission.score is None else f'{submission.score}/{assignment.max_score}'
+            message = f'Задание «{assignment.title}» проверено. Оценка: {score}.'
+
+        create_notification(
+            user=submission.student,
+            type=Notification.Type.ASSIGNMENT,
+            title=title,
+            message=message,
+            link=f'/assignment/{assignment.id}',
+        )
     
 @extend_schema_view(
-    post=extend_schema(tags=['Assignments'], summary='Создать задание для урока'),
+    post=extend_schema(tags=['Задания'], summary='Создать задание для урока'),
 )    
 
 class AssignmentCreateView(generics.CreateAPIView):
@@ -135,8 +163,8 @@ class AssignmentCreateView(generics.CreateAPIView):
         serializer.save(lesson=lesson)
 
 @extend_schema_view(
-    patch=extend_schema(tags=['Assignments'], summary='Обновить условие задания'),
-    delete=extend_schema(tags=['Assignments'], summary='Удалить условие задания'),
+    patch=extend_schema(tags=['Задания'], summary='Обновить условие задания'),
+    delete=extend_schema(tags=['Задания'], summary='Удалить условие задания'),
 )
 
 class AssignmentUpdateView(generics.RetrieveUpdateDestroyAPIView):
@@ -148,7 +176,7 @@ class AssignmentUpdateView(generics.RetrieveUpdateDestroyAPIView):
     
 
 @extend_schema_view(
-    get=extend_schema(tags=['Assignments'], summary='Посмотреть своё решение задания'),
+    get=extend_schema(tags=['Задания'], summary='Посмотреть своё решение задания'),
 )
 
 class MySubmissionView(generics.RetrieveAPIView):

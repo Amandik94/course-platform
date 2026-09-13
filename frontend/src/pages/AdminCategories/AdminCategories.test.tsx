@@ -40,9 +40,9 @@ describe('AdminCategories', () => {
 
         render(<MemoryRouter><AdminCategories /></MemoryRouter>);
         await screen.findByText('Backend');
-        await user.type(screen.getByLabelText('Name'), 'Frontend');
-        await user.type(screen.getByLabelText('Description'), 'React');
-        await user.click(screen.getByRole('button', { name: 'Create category' }));
+        await user.type(screen.getByLabelText('Название'), 'Frontend');
+        await user.type(screen.getByLabelText('Описание'), 'React');
+        await user.click(screen.getByRole('button', { name: 'Создать категорию' }));
 
         await waitFor(() => {
             expect(courseService.createCategory).toHaveBeenCalledWith({

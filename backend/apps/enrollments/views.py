@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 
 from apps.courses.models import Course
 from apps.lessons.models import Lesson
+from apps.notifications.models import Notification
+from apps.notifications.services import create_notification
 from .models import Enrollment, LessonProgress
 from .permissions import IsEnrollmentOwner
 from .serializers import EnrollmentSerializer, LessonProgressSerializer
@@ -17,7 +19,7 @@ from drf_spectacular.utils import extend_schema_view, extend_schema
 
 
 @extend_schema_view(
-    post=extend_schema(tags=['Enrollments'], summary='Записаться на курс'),
+    post=extend_schema(tags=['Записи на курсы'], summary='Записаться на курс'),
 )
 class EnrollView(APIView):
     """POST /api/v1/courses/{id}/enroll/ — записаться на курс"""
@@ -45,14 +47,28 @@ class EnrollView(APIView):
                     student=request.user, course=course
                 )
         except IntegrityError:
-            raise ValidationError({'detail': 'You are already enrolled in this course'})
+            raise ValidationError({'detail': 'Вы уже записаны на этот курс.'})
 
         if not created:
-            raise ValidationError({'detail': 'You are already enrolled in this course'})
+            raise ValidationError({'detail': 'Вы уже записаны на этот курс.'})
+        create_notification(
+            user=request.user,
+            type=Notification.Type.COURSE,
+            title='Запись на курс подтверждена',
+            message=f'Вы записались на курс «{course.title}».',
+            link=f'/courses/{course.id}',
+        )
+        create_notification(
+            user=course.teacher,
+            type=Notification.Type.COURSE,
+            title='Новый студент на курсе',
+            message=f'{request.user.full_name or request.user.email} записался(ась) на курс «{course.title}».',
+            link=f'/teacher/courses/{course.id}/manage',
+        )
         return Response(EnrollmentSerializer(enrollment).data, status=status.HTTP_201_CREATED)
 
 @extend_schema_view(
-    get=extend_schema(tags=['Enrollments'], summary='Мои курсы'),
+    get=extend_schema(tags=['Записи на курсы'], summary='Мои курсы'),
 )
 
 class MyCoursesView(generics.ListAPIView):
@@ -82,7 +98,7 @@ class MyCoursesView(generics.ListAPIView):
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Enrollments'], summary='Прогресс по урокам'),
+    get=extend_schema(tags=['Записи на курсы'], summary='Прогресс по урокам'),
 )
 class ProgressListView(generics.ListAPIView):
     """GET /api/v1/progress/ — весь прогресс текущего студента по урокам"""
@@ -98,7 +114,7 @@ class ProgressListView(generics.ListAPIView):
         ).select_related('lesson')
 
 @extend_schema_view(
-    post=extend_schema(tags=['Lessons'], summary='Завершить урок'),
+    post=extend_schema(tags=['Уроки'], summary='Завершить урок'),
 )
 
 class CompleteLessonView(APIView):
@@ -159,6 +175,13 @@ class CompleteLessonView(APIView):
         
         if course_completed:
             issue_certificate(student=request.user, course=course)
+            create_notification(
+                user=request.user,
+                type=Notification.Type.CERTIFICATE,
+                title='Сертификат выдан',
+                message=f'Поздравляем! Ваш сертификат за курс «{course.title}» готов.',
+                link='/certificates',
+            )
 
 
         return Response({

@@ -7,7 +7,7 @@ from drf_spectacular.utils import extend_schema_view, extend_schema
 
 
 @extend_schema_view(
-    get=extend_schema(tags=['Certificates'], summary='Список сертификатов'),
+    get=extend_schema(tags=['Сертификаты'], summary='Список сертификатов'),
 )
 class CertificateListView(generics.ListAPIView):
     """GET /api/v1/certificates/ — мои сертификаты"""
@@ -22,7 +22,7 @@ class CertificateListView(generics.ListAPIView):
         ).select_related('course')
 
 @extend_schema_view(
-    get=extend_schema(tags=['Certificates'], summary='Сертификат по id'),
+    get=extend_schema(tags=['Сертификаты'], summary='Сертификат по id'),
 )
 
 class CertificateDetailView(generics.RetrieveAPIView):

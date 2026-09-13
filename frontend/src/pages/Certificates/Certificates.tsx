@@ -41,7 +41,7 @@ const Certificates = () => {
                         <h3>{cert.course_title}</h3>
                         <span className={styles.number}>№ {cert.certificate_number}</span>
                         <span className={styles.number}>
-                            Выдан: {new Date(cert.issued_at).toLocaleDateString()}
+                            Выдан: {new Date(cert.issued_at).toLocaleDateString('ru-RU')}
                         </span>
                         {cert.download_url && (
                             <a href={cert.download_url} target="_blank" rel="noopener noreferrer">

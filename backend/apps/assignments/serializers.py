@@ -44,7 +44,7 @@ class SubmissionReviewSerializer(serializers.ModelSerializer):
         max_score = self.instance.assignment.max_score if self.instance else None
 
         if status == AssignmentSubmission.Status.ACCEPTED and score is None:
-            raise serializers.ValidationError({'score': 'При статусе accepted нужно указать оценку'})
+            raise serializers.ValidationError({'score': 'При статусе «Принято» нужно указать оценку'})
         if score is not None and max_score is not None and score > max_score:
             raise serializers.ValidationError({'score': f'Оценка не может превышать {max_score}'})
         return attrs

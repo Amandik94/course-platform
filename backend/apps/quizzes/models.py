@@ -8,11 +8,11 @@ class Quiz(models.Model):
     )
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    passing_score = models.PositiveSmallIntegerField(default=70, verbose_name='Passing score, %')
+    passing_score = models.PositiveSmallIntegerField(default=70, verbose_name='Проходной балл, %')
 
     class Meta:
-        verbose_name = 'Quiz'
-        verbose_name_plural = 'Quizzes'
+        verbose_name = 'Тест'
+        verbose_name_plural = 'Тесты'
         constraints = [
             models.CheckConstraint(
                 check=models.Q(passing_score__gte=0, passing_score__lte=100),
@@ -30,20 +30,20 @@ class Quiz(models.Model):
 
 class Question(models.Model):
     class Type(models.TextChoices):
-        SINGLE = 'single', 'Single choice'
-        MULTIPLE = 'multiple', 'Multiple choice'
-        TEXT = 'text', 'Text answer'
+        SINGLE = 'single', 'Один вариант'
+        MULTIPLE = 'multiple', 'Несколько вариантов'
+        TEXT = 'text', 'Текстовый ответ'
 
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
-    question = models.CharField(max_length=500, verbose_name='Question text')
+    question = models.CharField(max_length=500, verbose_name='Текст вопроса')
     type = models.CharField(max_length=20, choices=Type.choices, default=Type.SINGLE)
     points = models.PositiveSmallIntegerField(default=1)
     order = models.PositiveIntegerField(default=0)
-    text_answer = models.CharField(max_length=500, blank=True, verbose_name='Expected text answer')
+    text_answer = models.CharField(max_length=500, blank=True, verbose_name='Ожидаемый текстовый ответ')
 
     class Meta:
-        verbose_name = 'Question'
-        verbose_name_plural = 'Questions'
+        verbose_name = 'Вопрос'
+        verbose_name_plural = 'Вопросы'
         ordering = ['order', 'id']
 
     def __str__(self):
@@ -56,8 +56,8 @@ class Answer(models.Model):
     is_correct = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = 'Answer option'
-        verbose_name_plural = 'Answer options'
+        verbose_name = 'Вариант ответа'
+        verbose_name_plural = 'Варианты ответов'
 
     def __str__(self):
         return self.text
@@ -68,14 +68,14 @@ class QuizAttempt(models.Model):
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='quiz_attempts',
     )
-    score = models.PositiveSmallIntegerField(verbose_name='Score, %')
+    score = models.PositiveSmallIntegerField(verbose_name='Оценка, %')
     passed = models.BooleanField(default=False)
-    answers_snapshot = models.JSONField(default=dict, verbose_name='Submitted answers snapshot')
+    answers_snapshot = models.JSONField(default=dict, verbose_name='Снимок отправленных ответов')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Quiz attempt'
-        verbose_name_plural = 'Quiz attempts'
+        verbose_name = 'Попытка теста'
+        verbose_name_plural = 'Попытки теста'
         ordering = ['-created_at']
         constraints = [
             models.CheckConstraint(

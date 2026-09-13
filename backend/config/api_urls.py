@@ -13,4 +13,6 @@ urlpatterns = [
     path('', include('apps.quizzes.urls')),
     path('', include('apps.certificates.urls')),
     path('', include('apps.dashboard.urls')),
+    path('', include('apps.notifications.urls')),
+    path('', include('apps.reviews.urls')),
 ]

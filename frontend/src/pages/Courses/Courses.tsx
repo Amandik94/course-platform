@@ -7,14 +7,15 @@ import Pagination from '../../components/Pagination/Pagination';
 import { useCourses } from '../../features/courses/useCourses';
 import { courseService } from '../../services/courseService';
 import type { Category, CourseLevel } from '../../types/course';
+import { COURSE_LEVEL_LABELS } from '../../utils/labels';
 import styles from './Courses.module.css';
 
 const LEVELS: { value: CourseLevel | ''; label: string }[] = [
     { value: '', label: 'Все уровни' },
-    { value: 'beginner', label: 'Начинающий' },
-    { value: 'junior', label: 'Junior' },
-    { value: 'middle', label: 'Middle' },
-    { value: 'advanced', label: 'Advanced' },
+    { value: 'beginner', label: COURSE_LEVEL_LABELS.beginner },
+    { value: 'junior', label: COURSE_LEVEL_LABELS.junior },
+    { value: 'middle', label: COURSE_LEVEL_LABELS.middle },
+    { value: 'advanced', label: COURSE_LEVEL_LABELS.advanced },
 ];
 
 const Courses = () => {

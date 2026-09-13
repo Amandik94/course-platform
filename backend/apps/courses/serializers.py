@@ -17,13 +17,15 @@ class CourseListSerializer(serializers.ModelSerializer):
     teacher_id = serializers.IntegerField(source='teacher.id', read_only=True)
     category = CategorySerializer(read_only=True)
     lessons_count = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = (
             'id', 'title', 'slug', 'short_description', 'cover',
             'category', 'teacher_name', 'teacher_id', 'level', 'duration',
-            'lessons_count', 'status',
+            'lessons_count', 'average_rating', 'reviews_count', 'status',
         )
 
     def get_lessons_count(self, obj) -> int:
@@ -31,6 +33,15 @@ class CourseListSerializer(serializers.ModelSerializer):
         if annotated_count is not None:
             return annotated_count
         return obj.lessons_count
+
+    def get_average_rating(self, obj) -> float:
+        return round(float(getattr(obj, 'average_rating', 0.0) or 0.0), 1)
+
+    def get_reviews_count(self, obj) -> int:
+        annotated_count = getattr(obj, 'reviews_count', None)
+        if annotated_count is not None:
+            return annotated_count
+        return obj.reviews.count()
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
@@ -42,13 +53,16 @@ class CourseDetailSerializer(serializers.ModelSerializer):
     )
     lessons_count = serializers.SerializerMethodField()
     is_enrolled = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    reviews_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
         fields = (
             'id', 'title', 'slug', 'description', 'short_description',
             'cover', 'category', 'category_id', 'teacher', 'level',
-            'duration', 'status', 'lessons_count', 'is_enrolled',
+            'duration', 'status', 'lessons_count', 'average_rating',
+            'reviews_count', 'is_enrolled',
             'created_at', 'updated_at',
         )
         read_only_fields = ('slug', 'teacher')
@@ -69,6 +83,15 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         if annotated_count is not None:
             return annotated_count
         return obj.lessons_count
+
+    def get_average_rating(self, obj) -> float:
+        return round(float(getattr(obj, 'average_rating', 0.0) or 0.0), 1)
+
+    def get_reviews_count(self, obj) -> int:
+        annotated_count = getattr(obj, 'reviews_count', None)
+        if annotated_count is not None:
+            return annotated_count
+        return obj.reviews.count()
 
     def create(self, validated_data):
         validated_data['teacher'] = self.context['request'].user

@@ -41,7 +41,7 @@ const AdminCategories = () => {
     const submit = async (event: FormEvent) => {
         event.preventDefault();
         if (!form.name.trim()) {
-            setError('Category name is required.');
+            setError('Название категории обязательно.');
             return;
         }
         setIsSaving(true);
@@ -50,10 +50,10 @@ const AdminCategories = () => {
         try {
             if (editingId) {
                 await courseService.updateCategory(editingId, form);
-                setSuccess('Category updated.');
+                setSuccess('Категория обновлена.');
             } else {
                 await courseService.createCategory(form);
-                setSuccess('Category created.');
+                setSuccess('Категория создана.');
             }
             setForm(EMPTY_CATEGORY);
             setEditingId(null);
@@ -71,13 +71,13 @@ const AdminCategories = () => {
     };
 
     const deleteCategory = async (category: Category) => {
-        if (!window.confirm(`Delete category "${category.name}"?`)) return;
+        if (!window.confirm(`Удалить категорию «${category.name}»?`)) return;
         setIsSaving(true);
         setError('');
         setSuccess('');
         try {
             await courseService.deleteCategory(category.id);
-            setSuccess('Category deleted.');
+            setSuccess('Категория удалена.');
             await loadCategories();
         } catch (err) {
             setError(getApiErrorMessage(err));
@@ -92,31 +92,31 @@ const AdminCategories = () => {
         <div className={styles.page}>
             <div className={styles.header}>
                 <div>
-                    <h1>Admin Categories</h1>
-                    <p>Manage catalog categories used by courses.</p>
+                    <h1>Категории</h1>
+                    <p>Управление категориями каталога курсов.</p>
                 </div>
                 <Link to="/dashboard/admin">
-                    <Button type="button" variant="secondary">Dashboard</Button>
+                    <Button type="button" variant="secondary">Панель управления</Button>
                 </Link>
             </div>
 
-            {error && <EmptyState title="Category action failed" description={error} variant="error" />}
+            {error && <EmptyState title="Не удалось выполнить действие с категорией" description={error} variant="error" />}
             {success && <p className={styles.success}>{success}</p>}
 
             <div className={styles.columns}>
                 <section className={styles.panel}>
-                    <h2>{editingId ? 'Edit Category' : 'Create Category'}</h2>
+                    <h2>{editingId ? 'Редактировать категорию' : 'Создать категорию'}</h2>
                     <form className={styles.form} onSubmit={(event) => void submit(event)}>
-                        <Input label="Name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+                        <Input label="Название" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
                         <label className={styles.field}>
-                            <span>Description</span>
+                            <span>Описание</span>
                             <textarea rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
                         </label>
                         <div className={styles.actions}>
-                            <Button type="submit" isLoading={isSaving}>{editingId ? 'Save category' : 'Create category'}</Button>
+                            <Button type="submit" isLoading={isSaving}>{editingId ? 'Сохранить категорию' : 'Создать категорию'}</Button>
                             {editingId && (
                                 <Button type="button" variant="secondary" onClick={() => { setEditingId(null); setForm(EMPTY_CATEGORY); }}>
-                                    Cancel
+                                    Отмена
                                 </Button>
                             )}
                         </div>
@@ -124,20 +124,20 @@ const AdminCategories = () => {
                 </section>
 
                 <section className={styles.panel}>
-                    <h2>Categories</h2>
+                    <h2>Категории</h2>
                     {categories.length === 0 ? (
-                        <EmptyState title="No categories" />
+                        <EmptyState title="Категорий пока нет" />
                     ) : (
                         <div className={styles.list}>
                             {categories.map((category) => (
                                 <div key={category.id} className={styles.row}>
                                     <div>
                                         <strong>{category.name}</strong>
-                                        <p>{category.description || 'No description'}</p>
+                                        <p>{category.description || 'Описание не указано'}</p>
                                     </div>
                                     <div className={styles.actions}>
-                                        <Button type="button" variant="secondary" onClick={() => editCategory(category)}>Edit</Button>
-                                        <Button type="button" variant="danger" disabled={isSaving} onClick={() => void deleteCategory(category)}>Delete</Button>
+                                        <Button type="button" variant="secondary" onClick={() => editCategory(category)}>Редактировать</Button>
+                                        <Button type="button" variant="danger" disabled={isSaving} onClick={() => void deleteCategory(category)}>Удалить</Button>
                                     </div>
                                 </div>
                             ))}

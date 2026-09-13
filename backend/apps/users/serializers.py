@@ -14,7 +14,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if 'role' in self.initial_data:
-            raise serializers.ValidationError({'role': 'Role cannot be set during registration'})
+            raise serializers.ValidationError({'role': 'Роль нельзя задавать при регистрации'})
 
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({'password_confirm': 'Пароли не совпадают'})
@@ -71,7 +71,7 @@ class AuthResponseSerializer(serializers.Serializer):
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
-    """Admin-only serializer for user management."""
+    """Serializer управления пользователями для администратора."""
 
     full_name = serializers.ReadOnlyField()
 
@@ -88,7 +88,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
         unsafe_fields = forbidden_fields.intersection(self.initial_data.keys())
         if unsafe_fields:
             raise serializers.ValidationError({
-                field: 'This field cannot be changed through this endpoint.'
+                field: 'Это поле нельзя изменить через этот endpoint.'
                 for field in sorted(unsafe_fields)
             })
 
@@ -97,8 +97,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
             new_role = attrs.get('role', self.instance.role)
             new_is_active = attrs.get('is_active', self.instance.is_active)
             if new_role != User.Role.ADMIN:
-                raise serializers.ValidationError({'role': 'Admins cannot demote their own account.'})
+                raise serializers.ValidationError({'role': 'Администратор не может понизить роль своего аккаунта.'})
             if new_is_active is False:
-                raise serializers.ValidationError({'is_active': 'Admins cannot block their own account.'})
+                raise serializers.ValidationError({'is_active': 'Администратор не может заблокировать свой аккаунт.'})
 
         return attrs

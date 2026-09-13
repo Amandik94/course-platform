@@ -53,7 +53,7 @@ const Dashboard = () => {
 
     return (
         <div className={`${styles.page} container`}>
-            <h1>Dashboard</h1>
+            <h1>Панель управления</h1>
             {dashboard.role === 'student' && <StudentDashboardView data={dashboard.data} />}
             {dashboard.role === 'teacher' && <TeacherDashboardView data={dashboard.data} />}
             {dashboard.role === 'admin' && <AdminDashboardView data={dashboard.data} />}
