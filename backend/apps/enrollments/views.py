@@ -41,6 +41,9 @@ class EnrollView(APIView):
         if Enrollment.objects.filter(student=request.user, course=course).exists():
             raise ValidationError({'detail': 'Вы уже записаны на этот курс'})
 
+        if course.price > 0:
+            raise PermissionDenied('Для записи на этот курс необходимо сначала оплатить курс.')
+
         try:
             with transaction.atomic():
                 enrollment, created = Enrollment.objects.get_or_create(

@@ -172,8 +172,7 @@ class AssignmentUpdateView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, IsAssignmentTeacherOwner]
     queryset = Assignment.objects.select_related('lesson__section__course')
     serializer_class = AssignmentCreateSerializer
-    
-    
+    lookup_url_kwarg = 'id'
 
 @extend_schema_view(
     get=extend_schema(tags=['Задания'], summary='Посмотреть своё решение задания'),

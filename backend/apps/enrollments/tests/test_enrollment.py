@@ -40,6 +40,17 @@ class TestEnrollment:
         response = student_client.post(reverse('course-enroll', kwargs={'id': draft_course.id}))
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
+    def test_cannot_enroll_paid_course_without_payment(self, student_client, published_course):
+        published_course.price = '12000.00'
+        published_course.save(update_fields=['price'])
+
+        response = student_client.post(
+            reverse('course-enroll', kwargs={'id': published_course.id})
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert Enrollment.objects.filter(course=published_course).count() == 0
+
     def test_unique_constraint_at_db_level(self, published_course, student_user):
         """Даже в обход API (например, прямой ORM-вызов), constraint 
         на уровне БД должен предотвращать дубликаты."""

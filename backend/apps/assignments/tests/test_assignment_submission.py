@@ -120,3 +120,48 @@ class TestAssignmentSubmission:
             reverse('submission-review', kwargs={'pk': submission.id}), {'status': 'accepted'},
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_teacher_owner_can_update_assignment(self, teacher_client, assignment_fixture):
+        response = teacher_client.patch(
+            reverse('assignment-manage', kwargs={'id': assignment_fixture.id}),
+            {'title': 'Обновлённое задание'},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assignment_fixture.refresh_from_db()
+        assert assignment_fixture.title == 'Обновлённое задание'
+
+    def test_teacher_owner_can_delete_assignment(self, teacher_client, assignment_fixture):
+        response = teacher_client.delete(
+            reverse('assignment-manage', kwargs={'id': assignment_fixture.id}),
+        )
+
+        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert not Assignment.objects.filter(pk=assignment_fixture.pk).exists()
+
+    def test_other_teacher_cannot_update_assignment(
+        self, api_client, assignment_fixture, django_user_model,
+    ):
+        other_teacher = django_user_model.objects.create_user(
+            email='assignment-owner-other@test.com', password='pass12345', role='teacher',
+        )
+        api_client.force_authenticate(user=other_teacher)
+
+        response = api_client.patch(
+            reverse('assignment-manage', kwargs={'id': assignment_fixture.id}),
+            {'title': 'Чужое изменение'},
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assignment_fixture.refresh_from_db()
+        assert assignment_fixture.title == 'Реализуйте функцию'
+
+    def test_student_cannot_update_assignment(self, student_client, assignment_fixture):
+        response = student_client.patch(
+            reverse('assignment-manage', kwargs={'id': assignment_fixture.id}),
+            {'title': 'Изменение студента'},
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assignment_fixture.refresh_from_db()
+        assert assignment_fixture.title == 'Реализуйте функцию'

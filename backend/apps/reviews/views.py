@@ -37,7 +37,12 @@ class CourseReviewListCreateView(generics.ListCreateAPIView):
         if getattr(self, 'swagger_fake_view', False):
             return Review.objects.none()
         course = get_visible_course_for_request(self.request, self.kwargs['course_id'])
-        return Review.objects.filter(course=course).select_related('student', 'course')
+        queryset = Review.objects.filter(course=course).select_related('student', 'course')
+        if self.request.query_params.get('mine', '').lower() == 'true':
+            if not self.request.user.is_authenticated:
+                return queryset.none()
+            queryset = queryset.filter(student=self.request.user)
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

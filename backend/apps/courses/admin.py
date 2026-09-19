@@ -17,7 +17,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ('title', 'teacher', 'category', 'level', 'status', 'created_at')
+    list_display = ('title', 'teacher', 'category', 'level', 'price', 'status', 'created_at')
     list_filter = ('status', 'level', 'category')
     search_fields = ('title', 'description')
     prepopulated_fields = {'slug': ('title',)}

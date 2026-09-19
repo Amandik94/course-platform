@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.text import slugify
 
@@ -56,6 +57,9 @@ class Course(models.Model):
     duration = models.PositiveIntegerField(
         default=0, verbose_name='Длительность (в часах)'
     )
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, validators=[MinValueValidator(0)]
+    )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -66,6 +70,12 @@ class Course(models.Model):
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['status', 'level']),  # часто фильтруем по этой паре
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(price__gte=0),
+                name='course_price_non_negative',
+            ),
         ]
 
     def __str__(self):

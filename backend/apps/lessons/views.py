@@ -34,7 +34,9 @@ class LessonListCreateView(generics.ListCreateAPIView):
             Section.objects.select_related('course'), id=self.kwargs['section_id']
         )
         self.check_object_permissions(self.request, section)
-        qs = Lesson.objects.filter(section=section).select_related('section__course')
+        qs = Lesson.objects.filter(section=section).select_related(
+            'section__course', 'assignment', 'quiz',
+        )
         if can_access_course_content(self.request.user, section.course):
             return qs
         if section.course.status == section.course.Status.PUBLISHED:
@@ -62,7 +64,7 @@ class LessonDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LessonSerializer
 
     def get_queryset(self):
-        return Lesson.objects.select_related('section__course')
+        return Lesson.objects.select_related('section__course', 'assignment', 'quiz')
 
     def get_object(self):
         lesson = super().get_object()

@@ -25,7 +25,7 @@ class CourseListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'slug', 'short_description', 'cover',
             'category', 'teacher_name', 'teacher_id', 'level', 'duration',
-            'lessons_count', 'average_rating', 'reviews_count', 'status',
+            'price', 'lessons_count', 'average_rating', 'reviews_count', 'status',
         )
 
     def get_lessons_count(self, obj) -> int:
@@ -61,7 +61,7 @@ class CourseDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'slug', 'description', 'short_description',
             'cover', 'category', 'category_id', 'teacher', 'level',
-            'duration', 'status', 'lessons_count', 'average_rating',
+            'duration', 'price', 'status', 'lessons_count', 'average_rating',
             'reviews_count', 'is_enrolled',
             'created_at', 'updated_at',
         )

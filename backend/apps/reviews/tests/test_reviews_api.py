@@ -69,6 +69,34 @@ class TestCourseReviews:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert Review.objects.filter(course=published_course, student=student_user).count() == 1
 
+    def test_mine_filter_returns_only_current_students_review(
+        self, student_client, student_user, published_course, django_user_model,
+    ):
+        other_student = django_user_model.objects.create_user(
+            email='other-filtered-reviewer@test.com', password='pass12345', role='student',
+        )
+        own_review = Review.objects.create(
+            course=published_course,
+            student=student_user,
+            rating=5,
+            comment='My existing review text.',
+        )
+        Review.objects.create(
+            course=published_course,
+            student=other_student,
+            rating=4,
+            comment='Another student review text.',
+        )
+
+        response = student_client.get(
+            reverse('course-review-list', kwargs={'course_id': published_course.id}),
+            {'mine': 'true'},
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['count'] == 1
+        assert response.data['results'][0]['id'] == own_review.id
+
     @pytest.mark.parametrize('rating', [0, 6])
     def test_invalid_rating_rejected(self, student_client, student_user, published_course, rating):
         Enrollment.objects.create(student=student_user, course=published_course)

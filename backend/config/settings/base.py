@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'apps.dashboard',
     'apps.notifications',
     'apps.reviews',
+    'apps.payments',
 ]
 
 MIDDLEWARE = [
@@ -162,6 +163,11 @@ SPECTACULAR_SETTINGS = {
 }
 
 AUTH_USER_MODEL = 'users.User'
+
+PAYBOT_API_KEY = config('PAYBOT_API_KEY', default='')
+PAYBOT_API_URL = config('PAYBOT_API_URL', default='https://api.paybot.kz')
+PAYBOT_WEBHOOK_SECRET = config('PAYBOT_WEBHOOK_SECRET', default='')
+PAYBOT_TIMEOUT_SECONDS = config('PAYBOT_TIMEOUT_SECONDS', default=15, cast=int)
 
 LOGGING = {
     'version': 1,
