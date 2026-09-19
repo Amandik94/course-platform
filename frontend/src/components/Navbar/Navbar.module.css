@@ -1,59 +1,225 @@
 .navbar {
-    height: var(--navbar-height);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--spacing-lg);
-    background-color: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
     position: sticky;
     top: 0;
     z-index: 100;
+    min-height: var(--navbar-height);
+    background-color: color-mix(in srgb, var(--color-surface) 94%, transparent);
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(14px);
 }
 
-.brand {
-    font-size: var(--font-size-lg);
-    font-weight: 700;
-    color: var(--color-primary);
-}
-
-.links {
+.navbarInner {
+    width: min(100%, var(--container-max-width));
+    min-height: var(--navbar-height);
+    margin: 0 auto;
+    padding: 0 var(--spacing-lg);
     display: flex;
     align-items: center;
     gap: var(--spacing-lg);
 }
 
-.link {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-}
-
-.link:hover {
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
     color: var(--color-text);
+    font-size: var(--font-size-lg);
+    font-weight: 800;
 }
 
-.actions {
+.brandMark {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    background: var(--color-primary);
+    font-size: var(--font-size-sm);
+}
+
+.desktopLinks,
+.desktopActions,
+.mobileActions {
     display: flex;
     align-items: center;
+}
+
+.desktopLinks {
+    min-width: 0;
+    gap: clamp(12px, 1.5vw, 24px);
+    margin-left: auto;
+}
+
+.desktopActions {
     gap: var(--spacing-md);
 }
 
+.link,
 .userName {
+    color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
+    white-space: nowrap;
+}
+
+.link:hover,
+.userName:hover,
+.activeLink {
+    color: var(--color-primary);
+}
+
+.activeLink {
+    font-weight: 700;
+}
+
+.userName {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-weight: 600;
 }
 
-@media (max-width: 480px) {
-    .links {
+.registerLink,
+.mobilePrimaryAction,
+.mobileSecondaryAction {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+}
+
+.registerLink,
+.mobilePrimaryAction {
+    padding: 0 var(--spacing-lg);
+    color: #ffffff;
+    background: var(--color-primary);
+}
+
+.mobileActions,
+.mobileMenu {
+    display: none;
+}
+
+.menuButton {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.menuIcon {
+    width: 20px;
+    display: grid;
+    gap: 4px;
+}
+
+.menuIcon span {
+    height: 2px;
+    border-radius: 2px;
+    background: var(--color-text);
+}
+
+.mobileMenu {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lg);
+}
+
+.mobileLinks {
+    display: grid;
+}
+
+.mobileLinks .link {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mobileAccount {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-md);
+}
+
+.profileLink {
+    min-width: 0;
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--spacing-sm) 0;
+}
+
+.profileName {
+    overflow: hidden;
+    color: var(--color-text);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.profileHint {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.mobileSecondaryAction {
+    border: 1px solid var(--color-border);
+}
+
+.brand:focus-visible,
+.link:focus-visible,
+.userName:focus-visible,
+.registerLink:focus-visible,
+.profileLink:focus-visible,
+.mobilePrimaryAction:focus-visible,
+.mobileSecondaryAction:focus-visible,
+.menuButton:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    outline-offset: 2px;
+}
+
+@media (max-width: 1024px) {
+    .desktopLinks,
+    .desktopActions {
         display: none;
+    }
+
+    .mobileActions {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-left: auto;
+    }
+
+    .mobileMenu {
+        display: block;
     }
 }
 
-@media (max-width: 640px) {
-    .links {
-        gap: var(--spacing-sm);
+@media (max-width: 480px) {
+    .navbarInner {
+        padding: 0 var(--spacing-md);
     }
-    .userName {
-        display: none;
+
+    .brand {
+        font-size: 18px;
+    }
+
+    .brandMark {
+        width: 32px;
+        height: 32px;
+    }
+
+    .mobileAccount {
+        grid-template-columns: 1fr;
     }
 }

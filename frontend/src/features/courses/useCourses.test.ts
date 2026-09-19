@@ -18,6 +18,7 @@ describe('useCourses', () => {
                 short_description: '...', cover: null,
                 category: { id: 1, name: 'Python', slug: 'python', description: '' },
                 teacher_name: 'Teacher', teacher_id: 1, level: 'junior', duration: 10,
+                price: '0.00',
                 lessons_count: 5, average_rating: 4.5, reviews_count: 2, status: 'published',
             }],
         });

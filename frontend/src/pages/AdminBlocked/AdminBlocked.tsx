@@ -4,18 +4,18 @@ import EmptyState from '../../components/EmptyState/EmptyState';
 import styles from './AdminBlocked.module.css';
 
 const MESSAGES: Record<string, string> = {
-    users: 'Для списка пользователей, карточки пользователя, смены роли и блокировки нужны отдельные admin API endpoints.',
-    categories: 'Для создания, обновления и удаления категорий нужны отдельные admin API endpoints. Сейчас backend предоставляет только чтение списка категорий.',
+    users: 'Управление пользователями в этом разделе пока недоступно.',
+    categories: 'Изменение категорий пока недоступно. Сейчас можно только просматривать их список.',
 };
 
 const AdminBlocked = () => {
     const { area } = useParams();
     const key = area ?? '';
-    const description = MESSAGES[key] ?? 'Для этого раздела администрирования пока нет backend API endpoint.';
+    const description = MESSAGES[key] ?? 'Этот раздел администрирования пока недоступен.';
 
     return (
-        <div className={styles.page}>
-            <EmptyState title="Заблокировано backend API" description={description} variant="error" />
+        <div className={`${styles.page} container`}>
+            <EmptyState title="Раздел временно недоступен" description={description} variant="error" />
             <Link to="/dashboard">
                 <Button type="button" variant="secondary">Назад к панели управления</Button>
             </Link>

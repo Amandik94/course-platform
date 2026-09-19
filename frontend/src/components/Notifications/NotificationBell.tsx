@@ -29,8 +29,15 @@ const NotificationBell = () => {
                 setIsOpen(false);
             }
         };
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setIsOpen(false);
+        };
         document.addEventListener('mousedown', handlePointerDown);
-        return () => document.removeEventListener('mousedown', handlePointerDown);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     }, []);
 
     if (!isAuthenticated) return null;
@@ -42,6 +49,7 @@ const NotificationBell = () => {
                 className={styles.bell}
                 aria-label="Уведомления"
                 aria-expanded={isOpen}
+                aria-controls="notification-dropdown"
                 onClick={() => setIsOpen((current) => !current)}
             >
                 <span aria-hidden="true">🔔</span>

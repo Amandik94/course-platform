@@ -67,7 +67,7 @@ const AdminCourses = () => {
     if (isLoading) return <Loader />;
 
     return (
-        <div className={styles.page}>
+        <div className={`${styles.page} container`}>
             <div className={styles.header}>
                 <div>
                     <h1>Курсы</h1>
@@ -84,18 +84,18 @@ const AdminCourses = () => {
             {courses.length === 0 && !error ? (
                 <EmptyState title="Курсов пока нет" />
             ) : (
-                <div className={styles.table}>
-                    <div className={styles.tableHead}>
-                        <span>Курс</span>
-                        <span>Преподаватель</span>
-                        <span>Статус</span>
-                        <span>Действия</span>
+                <div className={styles.table} role="table" aria-label="Курсы">
+                    <div className={styles.tableHead} role="row">
+                        <span role="columnheader">Курс</span>
+                        <span role="columnheader">Преподаватель</span>
+                        <span role="columnheader">Статус</span>
+                        <span role="columnheader">Действия</span>
                     </div>
                     {courses.map((course) => (
-                        <div key={course.id} className={styles.tableRow}>
-                            <span>{course.title}</span>
-                            <span>{course.teacher_name}</span>
-                            <label className={styles.statusSelect}>
+                        <div key={course.id} className={styles.tableRow} role="row">
+                            <span role="cell" data-label="Курс">{course.title}</span>
+                            <span role="cell" data-label="Преподаватель">{course.teacher_name}</span>
+                            <label className={styles.statusSelect} role="cell" data-label="Статус">
                                 <select
                                     value={course.status}
                                     disabled={isSaving}
@@ -106,7 +106,7 @@ const AdminCourses = () => {
                                     <option value="archived">{COURSE_STATUS_LABELS.archived}</option>
                                 </select>
                             </label>
-                            <div className={styles.actions}>
+                            <div className={styles.actions} data-label="Действия" role="cell">
                                 <Link to={`/courses/${course.id}`}>
                                     <Button type="button" variant="secondary">Открыть</Button>
                                 </Link>

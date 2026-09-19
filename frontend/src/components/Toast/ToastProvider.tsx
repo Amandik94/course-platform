@@ -35,11 +35,12 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
         <ToastContext.Provider value={{ showToast }}>
             {children}
 
-            <div className={styles.container}>
+            <div className={styles.container} aria-live="polite" aria-atomic="true">
                 {toasts.map((toast) => (
                     <div
                         key={toast.id}
                         className={`${styles.toast} ${styles[toast.type]}`}
+                        role={toast.type === 'error' ? 'alert' : 'status'}
                     >
                         {toast.message}
                     </div>

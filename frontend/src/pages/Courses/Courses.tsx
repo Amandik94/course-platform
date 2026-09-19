@@ -60,14 +60,19 @@ const Courses = () => {
             </div>
 
             <div className={styles.controls}>
-                <input
-                    className={styles.searchInput}
-                    placeholder="Поиск по названию курса..."
-                    defaultValue={search}
-                    onChange={(e) => updateParam('search', e.target.value)}
-                />
+                <label className={styles.searchControl}>
+                    <span>Поиск</span>
+                    <input
+                        className={styles.searchInput}
+                        placeholder="Поиск по названию курса..."
+                        defaultValue={search}
+                        onChange={(e) => updateParam('search', e.target.value)}
+                    />
+                </label>
 
-                <select
+                <label className={styles.control}>
+                    <span>Категория</span>
+                    <select
                     className={styles.select}
                     value={category}
                     onChange={(e) => updateParam('category', e.target.value)}
@@ -78,9 +83,12 @@ const Courses = () => {
                             {cat.name}
                         </option>
                     ))}
-                </select>
+                    </select>
+                </label>
 
-                <select
+                <label className={styles.control}>
+                    <span>Уровень</span>
+                    <select
                     className={styles.select}
                     value={level}
                     onChange={(e) => updateParam('level', e.target.value)}
@@ -90,9 +98,12 @@ const Courses = () => {
                             {lvl.label}
                         </option>
                     ))}
-                </select>
+                    </select>
+                </label>
 
-                <select
+                <label className={styles.control}>
+                    <span>Сортировка</span>
+                    <select
                     className={styles.select}
                     value={ordering}
                     onChange={(e) => updateParam('ordering', e.target.value)}
@@ -100,7 +111,8 @@ const Courses = () => {
                     <option value="-created_at">Сначала новые</option>
                     <option value="title">По названию (А-Я)</option>
                     <option value="duration">По длительности</option>
-                </select>
+                    </select>
+                </label>
             </div>
 
             {isLoading && (

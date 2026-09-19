@@ -65,7 +65,7 @@ export const AdminUsersList = () => {
     if (isLoading) return <Loader />;
 
     return (
-        <div className={styles.page}>
+        <div className={`${styles.page} container`}>
             <div className={styles.header}>
                 <div>
                     <h1>Пользователи</h1>
@@ -105,21 +105,21 @@ export const AdminUsersList = () => {
             {users.length === 0 && !error ? (
                 <EmptyState title="Пользователей нет" />
             ) : (
-                <div className={styles.table}>
-                    <div className={styles.tableHead}>
-                        <span>Пользователь</span>
-                        <span>Имя</span>
-                        <span>Роль</span>
-                        <span>Статус</span>
-                        <span>Действия</span>
+                <div className={styles.table} role="table" aria-label="Пользователи">
+                    <div className={styles.tableHead} role="row">
+                        <span role="columnheader">Пользователь</span>
+                        <span role="columnheader">Имя</span>
+                        <span role="columnheader">Роль</span>
+                        <span role="columnheader">Статус</span>
+                        <span role="columnheader">Действия</span>
                     </div>
                     {users.map((user) => (
-                        <div key={user.id} className={styles.tableRow}>
-                            <span>{user.email}</span>
-                            <span>{user.full_name || '-'}</span>
-                            <span>{ROLE_LABELS[user.role]}</span>
-                            <span>{user.is_active ? 'Активен' : 'Заблокирован'}</span>
-                            <div className={styles.actions}>
+                        <div key={user.id} className={styles.tableRow} role="row">
+                            <span role="cell" data-label="Пользователь">{user.email}</span>
+                            <span role="cell" data-label="Имя">{user.full_name || '-'}</span>
+                            <span role="cell" data-label="Роль">{ROLE_LABELS[user.role]}</span>
+                            <span role="cell" data-label="Статус">{user.is_active ? 'Активен' : 'Заблокирован'}</span>
+                            <div className={styles.actions} data-label="Действия" role="cell">
                                 <Link to={`/admin/users/${user.id}`}>
                                     <Button type="button" variant="secondary">Открыть</Button>
                                 </Link>
@@ -195,7 +195,7 @@ export const AdminUserDetail = () => {
     if (!user) return <EmptyState title="Пользователь не найден" variant="error" />;
 
     return (
-        <div className={styles.page}>
+        <div className={`${styles.page} container`}>
             <div className={styles.header}>
                 <div>
                     <h1>{user.email}</h1>

@@ -4,6 +4,7 @@ import Button from '../../components/Button/Button';
 import Loader from '../../components/Loader/Loader';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import { courseService } from '../../services/courseService';
+import { paymentService } from '../../services/paymentService';
 import { useEnroll } from '../../features/courses/useEnroll';
 import { useAuthStore } from '../../store/authStore';
 import type { CourseDetail as CourseDetailType, Section } from '../../types/course';
@@ -12,6 +13,7 @@ import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 import { useToast } from '../../components/Toast/useToast';
 import CourseReviews from '../../features/reviews/CourseReviews';
 import { COURSE_LEVEL_LABELS, pluralizeRu } from '../../utils/labels';
+import { formatKzt, isPaidAmount } from '../../utils/formatMoney';
 
 const CourseDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -24,6 +26,8 @@ const CourseDetail = () => {
     const [sections, setSections] = useState<Section[]>([]);
     const [loadedId, setLoadedId] = useState<string | undefined>();
     const [loadError, setLoadError] = useState<string | null>(null);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
+    const [isCreatingPayment, setIsCreatingPayment] = useState(false);
 
     useEffect(() => {
     if (!id) return;
@@ -80,6 +84,29 @@ const CourseDetail = () => {
         });
     };
 
+    const handleBuyCourse = async () => {
+        if (!isAuthenticated) {
+            navigate('/login');
+            return;
+        }
+        if (!course) return;
+
+        setIsCreatingPayment(true);
+        setPaymentError(null);
+        try {
+            const payment = await paymentService.createPayment(course.id);
+            sessionStorage.setItem('lastPaymentId', String(payment.id));
+            sessionStorage.setItem('lastPaymentCourseId', String(course.id));
+            window.location.assign(payment.deep_link);
+        } catch (err) {
+            const message = getApiErrorMessage(err) || 'Не удалось создать платеж. Попробуйте еще раз.';
+            setPaymentError(message);
+            showToast(message, 'error');
+        } finally {
+            setIsCreatingPayment(false);
+        }
+    };
+
     if (isLoading) return <Loader text="Загрузка курса..." />;
     if (loadError || !course) return <EmptyState variant="error" title="Курс не найден" description={loadError ?? undefined} />;
 
@@ -98,16 +125,30 @@ const CourseDetail = () => {
                         <span className={styles.badge}>
                             {course.lessons_count} {pluralizeRu(course.lessons_count, ['урок', 'урока', 'уроков'])}
                         </span>
+                        <span className={styles.badge}>{formatKzt(course.price)}</span>
                     </div>
 
                     <h1>{course.title}</h1>
                     <p className={styles.teacher}>Преподаватель: {course.teacher.full_name}</p>
                     <p>{course.short_description}</p>
+                    <p className={styles.priceLine}>
+                        Цена: <strong>{formatKzt(course.price)}</strong>
+                    </p>
 
                     <div className={styles.actionRow}>
-                        {user?.role === 'student' && !course.is_enrolled && (
+                        {!isAuthenticated && !course.is_enrolled && (
+                            <Button onClick={() => navigate('/login')} variant="secondary">
+                                Войти, чтобы записаться
+                            </Button>
+                        )}
+                        {isAuthenticated && user?.role === 'student' && !course.is_enrolled && !isPaidAmount(course.price) && (
                             <Button onClick={handleEnroll} isLoading={isEnrolling}>
-                                Записаться на курс
+                                Записаться бесплатно
+                            </Button>
+                        )}
+                        {isAuthenticated && user?.role === 'student' && !course.is_enrolled && isPaidAmount(course.price) && (
+                            <Button onClick={() => void handleBuyCourse()} isLoading={isCreatingPayment}>
+                                Купить курс — {formatKzt(course.price)}
                             </Button>
                         )}
                         {course.is_enrolled && (
@@ -115,7 +156,9 @@ const CourseDetail = () => {
                                 Продолжить обучение
                             </Button>
                         )}
-                        {enrollError && <span className={styles.errorText}>{enrollError}</span>}
+                        {(enrollError || paymentError) && (
+                            <span className={styles.errorText}>{enrollError || paymentError}</span>
+                        )}
                     </div>
                 </div>
             </div>
@@ -123,7 +166,7 @@ const CourseDetail = () => {
             <h2>Описание</h2>
             <p>{course.description}</p>
 
-            <h2 style={{ marginTop: 'var(--spacing-lg)' }}>Программа курса</h2>
+            <h2 className={styles.sectionHeading}>Программа курса</h2>
             <div className={styles.sections}>
                 {sections.map((section) => (
                     <div key={section.id} className={styles.section}>

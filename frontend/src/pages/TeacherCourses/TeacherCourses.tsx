@@ -55,11 +55,11 @@ const TeacherCourses = () => {
     if (isLoading) return <Loader />;
 
     return (
-        <div className={styles.page}>
-            <div className={styles.header}>
-                <div>
-                    <h1>Мои курсы</h1>
-                    <p>Управление курсами, разделами, уроками, заданиями и тестами.</p>
+            <div className={`${styles.page} container`}>
+                <div className={styles.header}>
+                    <div>
+                        <h1>Мои курсы</h1>
+                        <p>Управление курсами, разделами, уроками, заданиями и тестами.</p>
                 </div>
                 <Link to="/teacher/courses/new">
                     <Button type="button">Новый курс</Button>

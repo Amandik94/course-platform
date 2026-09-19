@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import Loader from '../../components/Loader/Loader';
 
 interface ProtectedRouteProps {
     children: ReactNode;
@@ -16,7 +17,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     const location = useLocation();
 
     if (isInitializing) {
-        return null; // либо компонент Loader — подключим на Этапе 18
+        return <Loader text="Проверяем сессию..." />;
     }
 
     if (!isAuthenticated) {

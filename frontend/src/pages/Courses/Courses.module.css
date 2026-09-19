@@ -1,5 +1,5 @@
 .page {
-    padding: var(--spacing-xl) 0;
+    padding-block: var(--spacing-xl);
 }
 
 .header {
@@ -8,14 +8,32 @@
 
 .controls {
     display: flex;
+    align-items: flex-end;
     flex-wrap: wrap;
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
 }
 
-.searchInput {
+.control,
+.searchControl {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.searchControl {
     flex: 1;
     min-width: 200px;
+}
+
+.searchInput {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
     padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -23,6 +41,8 @@
 }
 
 .select {
+    min-height: 44px;
+    max-width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -48,5 +68,16 @@
     }
     .controls {
         flex-direction: column;
+        align-items: stretch;
     }
+    .searchControl {
+        min-width: 0;
+    }
+}
+
+.searchInput:focus-visible,
+.select:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+    outline-offset: 1px;
+    border-color: var(--color-primary);
 }

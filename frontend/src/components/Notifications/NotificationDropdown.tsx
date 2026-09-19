@@ -41,7 +41,7 @@ const NotificationDropdown = ({
     };
 
     return (
-        <div className={styles.dropdown}>
+        <div id="notification-dropdown" className={styles.dropdown} aria-label="Последние уведомления">
             <div className={styles.header}>
                 <div>
                     <h2>Уведомления</h2>

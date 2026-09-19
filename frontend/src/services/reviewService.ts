@@ -8,6 +8,13 @@ export const reviewService = {
             .get<PaginatedResponse<Review>>(`courses/${courseId}/reviews/`, { params })
             .then((res) => res.data),
 
+    getMyReview: (courseId: number | string) =>
+        api
+            .get<PaginatedResponse<Review>>(`courses/${courseId}/reviews/`, {
+                params: { mine: true },
+            })
+            .then((res) => res.data.results[0] ?? null),
+
     createReview: (courseId: number | string, payload: CreateReviewPayload) =>
         api
             .post<Review>(`courses/${courseId}/reviews/`, payload)

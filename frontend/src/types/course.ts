@@ -20,6 +20,7 @@ export interface CourseListItem {
     teacher_id: number;
     level: CourseLevel;
     duration: number;
+    price: string;
     lessons_count: number;
     average_rating: number;
     reviews_count: number;
@@ -45,6 +46,7 @@ export interface CourseDetail {
     teacher: Teacher;
     level: CourseLevel;
     duration: number;
+    price: string;
     status: CourseStatus;
     lessons_count: number;
     average_rating: number;
@@ -96,6 +98,7 @@ export interface CourseUpsertPayload {
     category_id: number;
     level: CourseLevel;
     duration: number;
+    price: string;
     status: CourseStatus;
 }
 

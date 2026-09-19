@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import type { UserRole } from '../../types/user';
+import Loader from '../../components/Loader/Loader';
 
 interface RoleRouteProps {
     children: ReactNode;
@@ -20,7 +21,7 @@ const RoleRoute = ({ children, allowedRoles }: RoleRouteProps) => {
     const { user, isAuthenticated, isInitializing } = useAuthStore();
 
     if (isInitializing) {
-        return null;
+        return <Loader text="Проверяем сессию..." />;
     }
 
     if (!isAuthenticated) {

@@ -6,7 +6,6 @@ import type {
     CourseFilters,
     CourseListItem,
     Section,
-    Lesson,
     LessonDetail,
     CourseUpsertPayload,
     LessonUpsertPayload,
@@ -66,7 +65,7 @@ export const courseService = {
         api.delete(`sections/${sectionId}/`),
 
     getSectionLessons: (sectionId: number) =>
-        api.get<Lesson[]>(`sections/${sectionId}/lessons/`).then((res) => res.data),
+        api.get<LessonDetail[]>(`sections/${sectionId}/lessons/`).then((res) => res.data),
 
     getLessonById: (lessonId: number | string) =>
         api.get<LessonDetail>(`lessons/${lessonId}/`).then((res) => res.data),

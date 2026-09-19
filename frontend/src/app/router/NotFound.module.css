@@ -1,0 +1,8 @@
+.page {
+    padding-block: var(--spacing-xl);
+}
+
+.action {
+    display: flex;
+    justify-content: center;
+}

@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import Loader from '../../components/Loader/Loader';
 
 interface PublicRouteProps {
     children: ReactNode;
@@ -14,7 +15,7 @@ const PublicRoute = ({ children }: PublicRouteProps) => {
     const { isAuthenticated, isInitializing } = useAuthStore();
 
     if (isInitializing) {
-        return null;
+        return <Loader text="Проверяем сессию..." />;
     }
 
     if (isAuthenticated) {

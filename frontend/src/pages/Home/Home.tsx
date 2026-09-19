@@ -1,12 +1,8 @@
 import { Link } from 'react-router-dom';
+import CourseCard from '../../components/CourseCard/CourseCard';
+import Skeleton from '../../components/Skeleton/Skeleton';
+import { useCourses } from '../../features/courses/useCourses';
 import styles from './Home.module.css';
-
-const stats = [
-    { value: '100+', label: 'курсов' },
-    { value: '10 000+', label: 'студентов' },
-    { value: '50+', label: 'преподавателей' },
-    { value: '4.9', label: 'рейтинг платформы', accent: '★' },
-];
 
 const featureBadges = ['Практика', 'Проекты', 'Сообщество', 'Карьерный рост'];
 
@@ -71,8 +67,16 @@ const Icon = ({ name }: { name: string }) => {
 };
 
 const Home = () => {
+    const { courses, count, isLoading } = useCourses({ ordering: '-created_at', page: 1 });
+    const stats = [
+        { value: isLoading ? '...' : String(count), label: 'курсов в каталоге' },
+        { value: '4', label: 'уровня сложности' },
+        { value: '5', label: 'максимальная оценка', accent: '★' },
+        { value: '100%', label: 'онлайн-формат' },
+    ];
+
     return (
-        <main className={styles.page}>
+        <div className={styles.page}>
             <section className={styles.hero} aria-labelledby="home-hero-title">
                 <div className={styles.heroContent}>
                     <p className={styles.eyebrow}>УЧИСЬ • РАЗВИВАЙСЯ • СОЗДАВАЙ БУДУЩЕЕ</p>
@@ -163,7 +167,27 @@ const Home = () => {
                     ))}
                 </div>
             </section>
-        </main>
+
+            <section className={styles.coursesSection} aria-labelledby="new-courses-title">
+                <div className={styles.coursesHeader}>
+                    <div>
+                        <p className={styles.sectionEyebrow}>Начните обучение</p>
+                        <h2 id="new-courses-title">Новые курсы</h2>
+                    </div>
+                    <Link to="/courses" className={styles.catalogLink}>Смотреть все курсы →</Link>
+                </div>
+
+                <div className={styles.courseGrid}>
+                    {isLoading
+                        ? <Skeleton count={3} />
+                        : courses.slice(0, 3).map((course) => <CourseCard key={course.id} course={course} />)}
+                </div>
+
+                {!isLoading && courses.length === 0 && (
+                    <p className={styles.noCourses}>Опубликованные курсы скоро появятся.</p>
+                )}
+            </section>
+        </div>
     );
 };
 

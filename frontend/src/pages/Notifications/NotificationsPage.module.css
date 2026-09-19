@@ -1,6 +1,5 @@
 .page {
-    padding-top: var(--spacing-lg);
-    padding-bottom: var(--spacing-xl);
+    padding-block: var(--spacing-lg) var(--spacing-xl);
 }
 
 .header {

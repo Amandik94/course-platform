@@ -84,7 +84,7 @@ const TeacherSubmissions = () => {
     if (!assignment) return <EmptyState title="Задание не найдено" variant="error" />;
 
     return (
-        <div className={styles.page}>
+        <div className={`${styles.page} container`}>
             <div className={styles.header}>
                 <div>
                     <h1>{assignment.title}</h1>

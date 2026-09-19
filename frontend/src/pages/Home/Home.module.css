@@ -1,6 +1,5 @@
 .page {
     min-height: calc(100vh - var(--navbar-height));
-    overflow-x: hidden;
     background:
         radial-gradient(circle at 82% 8%, rgba(79, 70, 229, 0.16), transparent 32%),
         linear-gradient(135deg, #ffffff 0%, #f5f8ff 46%, #eef5ff 100%);
@@ -26,7 +25,7 @@
 .eyebrow,
 .sectionEyebrow {
     margin: 0 0 18px;
-    color: #64748b;
+    color: var(--color-text-secondary);
     font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.18em;
@@ -35,21 +34,22 @@
 
 .title {
     margin: 0;
-    color: #0b1f44;
-    font-size: clamp(42px, 6.2vw, 72px);
+    color: var(--color-text);
+    max-width: 640px;
+    font-size: 60px;
     line-height: 1.08;
     font-weight: 800;
 }
 
 .highlight {
-    color: #2563eb;
+    color: var(--color-primary);
 }
 
 .description {
     max-width: 620px;
     margin: 24px 0 0;
-    color: #334155;
-    font-size: clamp(18px, 2vw, 22px);
+    color: var(--color-text-secondary);
+    font-size: 20px;
     line-height: 1.55;
 }
 
@@ -80,7 +80,7 @@
 }
 
 .secondaryButton {
-    color: #1d4ed8;
+    color: var(--color-primary);
     background: rgba(255, 255, 255, 0.82);
     border: 1px solid rgba(37, 99, 235, 0.35);
     box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
@@ -109,15 +109,15 @@
 }
 
 .statItem dt {
-    color: #0b1f44;
-    font-size: clamp(22px, 2.3vw, 28px);
+    color: var(--color-text);
+    font-size: 26px;
     font-weight: 800;
     line-height: 1.1;
 }
 
 .statItem dd {
     margin: 6px 0 0;
-    color: #64748b;
+    color: var(--color-text-secondary);
     font-size: 15px;
     line-height: 1.25;
 }
@@ -339,8 +339,8 @@
 
 .sectionHeader h2 {
     margin: 0;
-    color: #0b1f44;
-    font-size: clamp(30px, 3.5vw, 44px);
+    color: var(--color-text);
+    font-size: 40px;
     line-height: 1.16;
     font-weight: 800;
 }
@@ -373,7 +373,7 @@
     display: grid;
     place-items: center;
     border-radius: 999px;
-    color: #2563eb;
+    color: var(--color-primary);
     background: #dbeafe;
 }
 
@@ -389,18 +389,64 @@
 
 .featureCard h3 {
     margin: 0;
-    color: #0b1f44;
+    color: var(--color-text);
     font-size: 20px;
     line-height: 1.25;
 }
 
 .featureCard p {
     margin: 14px 0 0;
-    color: #334155;
+    color: var(--color-text-secondary);
     line-height: 1.55;
 }
 
+.coursesSection {
+    width: min(100%, var(--container-max-width));
+    margin: 0 auto;
+    padding: 72px var(--spacing-lg) 88px;
+}
+
+.coursesHeader {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.coursesHeader h2 {
+    font-size: 36px;
+    line-height: 1.2;
+}
+
+.catalogLink {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.catalogLink:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    outline-offset: 3px;
+}
+
+.courseGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.noCourses {
+    color: var(--color-text-secondary);
+}
+
 @media (max-width: 1180px) {
+    .title {
+        font-size: 52px;
+    }
     .hero {
         grid-template-columns: 1fr 1fr;
         gap: 32px;
@@ -446,6 +492,10 @@
         margin-top: 32px;
         border-radius: 32px 32px 0 0;
     }
+
+    .courseGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 640px) {
@@ -461,7 +511,8 @@
     }
 
     .title {
-        font-size: clamp(36px, 12vw, 48px);
+        font-size: 40px;
+        overflow-wrap: anywhere;
     }
 
     .description {
@@ -533,5 +584,31 @@
 
     .featureCard {
         min-height: auto;
+    }
+
+    .coursesSection {
+        padding: 52px var(--spacing-md) 64px;
+    }
+
+    .coursesHeader {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .courseGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 375px) {
+    .title {
+        font-size: 30px;
+        overflow-wrap: normal;
+    }
+
+    .sectionHeader h2,
+    .coursesHeader h2 {
+        font-size: 28px;
     }
 }

@@ -37,7 +37,7 @@ const MyCourses = () => {
     return (
         <div className={`${styles.page} container`}>
             <h1>Мои курсы</h1>
-            <div className={styles.grid} style={{ marginTop: 'var(--spacing-lg)' }}>
+            <div className={styles.grid}>
                 {enrollments.map((enrollment) => (
                     <div key={enrollment.id} className={styles.card}>
                         {enrollment.course.cover && (

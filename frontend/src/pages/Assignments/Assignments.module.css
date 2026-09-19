@@ -1,5 +1,5 @@
 .page {
-    padding: var(--spacing-xl) 0;
+    padding-block: var(--spacing-xl);
     max-width: 800px;
 }
 
@@ -81,4 +81,16 @@
         min-height: 200px; /* на мобильном меньше высоты по умолчанию, юзер может resize */
         font-size: 13px;
     }
+}
+
+.solutionField {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    font-weight: 600;
+}
+
+.codeArea:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+    outline-offset: 2px;
 }

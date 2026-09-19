@@ -1,11 +1,12 @@
 .page {
-    padding: var(--spacing-xl) 0;
+    padding-block: var(--spacing-xl);
 }
 
 .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
 }
 
 .card {

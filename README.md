@@ -1,6 +1,6 @@
 # LMS-платформа для обучения программированию
 
-Полнофункциональная LMS-платформа для онлайн-обучения программированию. Backend построен на Django REST Framework, frontend - на React, TypeScript и Vite. Проект поддерживает роли студента, преподавателя и администратора, JWT-аутентификацию, курсы, уроки, задания, тесты, сертификаты, уведомления и отзывы.
+Полнофункциональная LMS-платформа для онлайн-обучения программированию. Backend построен на Django REST Framework, frontend - на React, TypeScript и Vite. Проект поддерживает роли студента, преподавателя и администратора, JWT-аутентификацию, курсы, уроки, задания, тесты, сертификаты, уведомления, отзывы и Sandbox-оплату платных курсов в KZT через PayBot.
 
 ## О проекте
 
@@ -12,6 +12,7 @@
 - `frontend/` - React SPA, маршрутизация, Axios-сервисы, Zustand-состояние, CSS Modules.
 - `nginx/` - production-like reverse proxy для React, Django API, static и media.
 - `docker-compose*.yml` - локальные Docker-сценарии для development и production-like окружений.
+- `payments` - универсальная история платежей, Sandbox-интеграция PayBot API v2 и frontend flow покупки курса.
 
 Проект находится в активной разработке. Основные LMS-сценарии реализованы, но production-внедрение требует отдельной настройки секретов, доменов, HTTPS, бэкапов и мониторинга.
 
@@ -29,6 +30,7 @@
 - Просмотр сертификатов и скачивание PDF-сертификата.
 - Просмотр уведомлений, счетчика непрочитанных, отметка одного или всех уведомлений прочитанными.
 - Просмотр отзывов курса, создание, редактирование и удаление своего отзыва при наличии записи на курс.
+- Покупка платного курса через PayBot Sandbox QR/deep link flow.
 
 ### Преподаватель
 
@@ -126,6 +128,7 @@ study_platforma/
 │   │   ├── enrollments/
 │   │   ├── lessons/
 │   │   ├── notifications/
+│   │   ├── payments/
 │   │   ├── quizzes/
 │   │   ├── reviews/
 │   │   └── users/
@@ -201,6 +204,10 @@ study_platforma/
 | `DB_PORT` | Порт PostgreSQL | `5432` |
 | `CORS_ALLOWED_ORIGINS` | Разрешенные origins frontend | `http://localhost:5173` |
 | `VITE_API_URL` | Base URL frontend для API | `/api/v1/` |
+| `PAYBOT_API_KEY` | Sandbox API key PayBot с префиксом `kp_test_` | пусто до настройки |
+| `PAYBOT_API_URL` | Base URL PayBot API v2 | `https://api.paybot.kz` |
+| `PAYBOT_WEBHOOK_SECRET` | Secret для проверки HMAC webhook PayBot | пусто до настройки |
+| `PAYBOT_TIMEOUT_SECONDS` | Таймаут запроса к PayBot в секундах | `15` |
 
 ## Локальный запуск backend
 
@@ -371,6 +378,10 @@ docker compose down
 | Certificates | `certificates/` | Список сертификатов |
 | Certificates | `certificates/<pk>/` | Детали сертификата |
 | Certificates | `certificates/<pk>/download/` | Скачивание PDF |
+| Payments | `payments/` | История платежей текущего пользователя |
+| Payments | `payments/create/` | Создание Sandbox QR-платежа PayBot |
+| Payments | `payments/<pk>/` | Статус платежа |
+| Payments | `payments/paybot/webhook/` | Подписанный webhook PayBot |
 | Dashboard | `dashboard/student/` | Dashboard студента |
 | Dashboard | `dashboard/teacher/` | Dashboard преподавателя |
 | Dashboard | `dashboard/admin/` | Dashboard администратора |
@@ -431,6 +442,9 @@ Authorization: Bearer <access_token>
 | `/assignment/:id` | Задание |
 | `/certificates` | Сертификаты |
 | `/notifications` | Уведомления |
+| `/payments` | История платежей |
+| `/payment/success` | Проверка результата оплаты |
+| `/payment/failure` | Неуспешная или отмененная оплата |
 | `/dashboard` | Dashboard по роли пользователя |
 | `/dashboard/teacher` | Dashboard преподавателя |
 | `/teacher/courses` | Курсы преподавателя |
@@ -458,6 +472,47 @@ Authorization: Bearer <access_token>
 - создание уведомлений из backend-событий через `create_notification(...)`.
 
 Frontend содержит `NotificationBell`, dropdown, страницу `/notifications`, `notificationService`, `useNotifications` и Zustand store для счетчика.
+
+## Тестовая оплата
+
+Проект поддерживает one-time оплату платных курсов в валюте `KZT` через PayBot Sandbox API v2. Для создания QR используется только Sandbox API key с префиксом `kp_test_`; live-ключи намеренно отклоняются backend.
+
+Основной flow:
+
+```text
+Student -> Course Detail -> Купить курс
+        -> POST /api/v1/payments/create/
+        -> Django берет Course.price из базы
+        -> Payment(PENDING)
+        -> POST https://api.paybot.kz/v2/qr
+        -> deep_link
+        -> PayBot/Kaspi Sandbox flow
+        -> POST /api/v1/payments/paybot/webhook/
+        -> backend проверяет HMAC, timestamp, webhook ID, operation ID и сумму
+        -> Payment(PAID)
+        -> Enrollment.get_or_create()
+        -> доступ к курсу
+```
+
+Важные правила безопасности:
+
+- Frontend не отправляет сумму платежа и не решает, что курс оплачен.
+- Цена берется только из `Course.price` на backend.
+- Прямая запись через `/api/v1/courses/<id>/enroll/` разрешена только для бесплатных курсов.
+- Платный курс добавляется в `Enrollment` только после валидного события `payment.completed` от PayBot.
+- LMS не хранит номер карты, CVV/CVC и другие карточные данные.
+- `Idempotency-Key` защищает создание QR, а `X-Webhook-ID` хранится в PostgreSQL для дедупликации webhook.
+- Повторный webhook не создаёт повторную запись на курс.
+- Событие `payment.refunded` не удаляет `Enrollment`: политика отзыва доступа после возврата пока не определена.
+
+Для локальной настройки нужны Sandbox credentials PayBot:
+
+- `PAYBOT_API_KEY=kp_test_...`;
+- `PAYBOT_WEBHOOK_SECRET=...`;
+- `PAYBOT_API_URL=https://api.paybot.kz`;
+- публичный webhook URL `https://<backend-host>/api/v1/payments/paybot/webhook/`.
+
+`localhost` обычно недоступен внешнему payment provider. Для Sandbox webhook нужен публичный HTTPS URL backend, например staging-домен или временный tunnel. Tunnel не входит в проект и не настраивается автоматически. Значения ключа и webhook secret необходимо добавить локально; не отправляйте их в репозиторий или чат.
 
 ## Отзывы
 
@@ -603,8 +658,9 @@ createdb -U postgres lms_db
 ### Реализовано
 
 - Auth и роли `student`, `teacher`, `admin`.
-- Курсы, категории, разделы и уроки.
+- Курсы, категории, цена курса, разделы и уроки.
 - Запись на курсы и прогресс по урокам.
+- Sandbox-оплата платных курсов через PayBot API v2.
 - Задания и проверка решений.
 - Тесты, вопросы, ответы и отправка результатов.
 - Сертификаты и PDF download.

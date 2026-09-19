@@ -89,7 +89,7 @@ const AdminCategories = () => {
     if (isLoading) return <Loader />;
 
     return (
-        <div className={styles.page}>
+        <div className={`${styles.page} container`}>
             <div className={styles.header}>
                 <div>
                     <h1>Категории</h1>

@@ -21,6 +21,10 @@ export function getApiErrorMessage(err: unknown): string {
         const data = err.response?.data;
         const status = err.response?.status;
 
+        if (status && status >= 500) {
+            return STATUS_MESSAGES[status] ?? 'Сервис временно недоступен. Попробуйте позже.';
+        }
+
         if (data?.detail && typeof data.detail === 'string') {
             return data.detail;
         }

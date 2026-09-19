@@ -64,6 +64,7 @@ describe('NotificationsPage', () => {
 
         expect(await screen.findByText('Запись на курс подтверждена')).toBeInTheDocument();
         expect(screen.getByText('Вы записались на курс Django.')).toBeInTheDocument();
+        expect(useNotificationStore.getState().unreadCount).toBe(1);
     });
 
     it('marks one notification as read', async () => {

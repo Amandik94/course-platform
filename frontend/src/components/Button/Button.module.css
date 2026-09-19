@@ -1,4 +1,6 @@
 .button {
+    min-height: 44px;
+    max-width: 100%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -8,7 +10,13 @@
     font-size: var(--font-size-md);
     font-weight: 600;
     transition: background-color 0.15s ease, opacity 0.15s ease;
-    white-space: nowrap;
+    text-align: center;
+    white-space: normal;
+}
+
+.button:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    outline-offset: 2px;
 }
 
 .button:disabled {

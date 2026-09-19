@@ -11,6 +11,7 @@ import CourseReviews from './CourseReviews';
 vi.mock('../../services/reviewService', () => ({
     reviewService: {
         getCourseReviews: vi.fn(),
+        getMyReview: vi.fn(),
         createReview: vi.fn(),
         updateReview: vi.fn(),
         deleteReview: vi.fn(),
@@ -39,6 +40,7 @@ const course: CourseDetail = {
     },
     level: 'junior',
     duration: 10,
+    price: '0.00',
     status: 'published',
     lessons_count: 5,
     average_rating: 4.5,
@@ -93,6 +95,7 @@ describe('CourseReviews', () => {
             previous: null,
             results: [review],
         });
+        vi.mocked(reviewService.getMyReview).mockResolvedValue(review);
         vi.mocked(courseService.getCourseById).mockResolvedValue(course);
         vi.mocked(reviewService.updateReview).mockResolvedValue(review);
         vi.mocked(reviewService.deleteReview).mockResolvedValue({} as never);
@@ -120,5 +123,20 @@ describe('CourseReviews', () => {
         await user.click(await screen.findByRole('button', { name: 'Удалить' }));
 
         await waitFor(() => expect(reviewService.deleteReview).toHaveBeenCalledWith(7));
+    });
+
+    it('does not show a second create form when own review is outside the current page', async () => {
+        vi.mocked(reviewService.getCourseReviews).mockResolvedValue({
+            count: 10,
+            next: null,
+            previous: '/api/v1/courses/1/reviews/?page=1',
+            results: [{ ...review, id: 8, student: { ...review.student, id: 3 } }],
+        });
+
+        renderCourseReviews();
+
+        await waitFor(() => expect(reviewService.getMyReview).toHaveBeenCalledWith(1));
+        expect(screen.queryByRole('button', { name: 'Отправить отзыв' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Редактировать' })).toBeInTheDocument();
     });
 });

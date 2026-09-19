@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ProgressBar from '../../components/ProgressBar/ProgressBar';
 import type { Lesson, Section } from '../../types/course';
@@ -22,36 +23,57 @@ const LessonSidebar = ({
     completedLessonIds,
     progressPercent,
 }: LessonSidebarProps) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+
     return (
         <aside className={styles.sidebar}>
             <div className={styles.sidebarHeader}>
-                <div className={styles.sidebarTitle}>Программа курса</div>
+                <div className={styles.sidebarHeading}>
+                    <div className={styles.sidebarTitle}>Программа курса</div>
+                    <button
+                        type="button"
+                        className={styles.sidebarToggle}
+                        aria-expanded={isExpanded}
+                        aria-controls="lesson-navigation"
+                        onClick={() => setIsExpanded((current) => !current)}
+                    >
+                        {isExpanded ? 'Скрыть' : 'Показать'}
+                    </button>
+                </div>
                 <ProgressBar value={progressPercent} />
             </div>
 
-            {sections.map((section) => (
-                <div key={section.id} className={styles.sectionBlock}>
-                    <div className={styles.sectionTitle}>{section.title}</div>
-                    {section.lessons.map((lesson) => {
-                        const isCompleted = completedLessonIds.has(lesson.id);
-                        const isActive = lesson.id === currentLessonId;
-                        return (
-                            <Link
-                                key={lesson.id}
-                                to={`/learn/${courseId}/${lesson.id}`}
-                                className={`${styles.lessonLink} ${isActive ? styles.lessonActive : ''}`}
-                            >
-                                <span
-                                    className={`${styles.checkIcon} ${isCompleted ? styles.checkCompleted : ''}`}
+            <div
+                id="lesson-navigation"
+                className={`${styles.lessonNavigation} ${isExpanded ? styles.lessonNavigationOpen : ''}`}
+            >
+                {sections.map((section) => (
+                    <div key={section.id} className={styles.sectionBlock}>
+                        <div className={styles.sectionTitle}>{section.title}</div>
+                        {section.lessons.map((lesson) => {
+                            const isCompleted = completedLessonIds.has(lesson.id);
+                            const isActive = lesson.id === currentLessonId;
+                            return (
+                                <Link
+                                    key={lesson.id}
+                                    to={`/learn/${courseId}/${lesson.id}`}
+                                    className={`${styles.lessonLink} ${isActive ? styles.lessonActive : ''}`}
+                                    aria-current={isActive ? 'page' : undefined}
+                                    onClick={() => setIsExpanded(false)}
                                 >
-                                    {isCompleted && '✓'}
-                                </span>
-                                {lesson.title}
-                            </Link>
-                        );
-                    })}
-                </div>
-            ))}
+                                    <span
+                                        className={`${styles.checkIcon} ${isCompleted ? styles.checkCompleted : ''}`}
+                                        aria-hidden="true"
+                                    >
+                                        {isCompleted && '✓'}
+                                    </span>
+                                    {lesson.title}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                ))}
+            </div>
         </aside>
     );
 };

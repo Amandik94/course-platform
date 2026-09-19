@@ -1,6 +1,13 @@
 @import './reset.css';
 @import './variables.css';
 
+html,
+body,
+#root {
+    width: 100%;
+    min-width: 0;
+}
+
 body {
     font-family: var(--font-family-base);
     font-size: var(--font-size-md);
@@ -20,9 +27,10 @@ h2 {
 
 /* Базовый контейнер для центрирования контента страниц */
 .container {
+    width: 100%;
     max-width: var(--container-max-width);
     margin: 0 auto;
-    padding: 24px var(--spacing-lg);
+    padding-inline: var(--spacing-lg);
 }
 
 /* Утилита для скрытия элемента визуально, но не для screen reader'ов */
@@ -40,6 +48,19 @@ h2 {
 
 @media (max-width: 768px) {
     .container {
-        padding: 0 var(--spacing-md);
+        padding-inline: var(--spacing-md);
     }
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+    outline-offset: 2px;
+}
+
+select,
+textarea {
+    max-width: 100%;
 }

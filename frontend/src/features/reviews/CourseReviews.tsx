@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EmptyState from '../../components/EmptyState/EmptyState';
 import Loader from '../../components/Loader/Loader';
 import Pagination from '../../components/Pagination/Pagination';
@@ -39,21 +39,27 @@ const CourseReviews = ({ course, onCourseUpdated }: CourseReviewsProps) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [editingReview, setEditingReview] = useState<Review | null>(null);
+    const [myReview, setMyReview] = useState<Review | null | undefined>(undefined);
     const [error, setError] = useState<string | null>(null);
-
-    const myReview = useMemo(() => {
-        if (!user) return null;
-        return reviewsPage.results.find((review) => review.student.id === user.id) ?? null;
-    }, [reviewsPage.results, user]);
 
     const totalPages = Math.ceil(reviewsPage.count / PAGE_SIZE);
     const canCreateReview = Boolean(
         isAuthenticated
         && user?.role === 'student'
         && course.is_enrolled
-        && !myReview
+        && myReview === null
         && !editingReview,
     );
+
+    const loadMyReview = useCallback(async () => {
+        if (!isAuthenticated || user?.role !== 'student' || !course.is_enrolled) {
+            setMyReview(null);
+            return null;
+        }
+        const review = await reviewService.getMyReview(course.id);
+        setMyReview(review);
+        return review;
+    }, [course.id, course.is_enrolled, isAuthenticated, user?.role]);
 
     const loadReviews = useCallback(async (targetPage = page) => {
         setIsLoading(true);
@@ -77,14 +83,20 @@ const CourseReviews = ({ course, onCourseUpdated }: CourseReviewsProps) => {
     }, [course.id, onCourseUpdated]);
 
     const refreshAll = useCallback(async (targetPage = page) => {
-        await Promise.all([loadReviews(targetPage), refreshCourse()]);
-    }, [loadReviews, page, refreshCourse]);
+        await Promise.all([loadReviews(targetPage), loadMyReview(), refreshCourse()]);
+    }, [loadMyReview, loadReviews, page, refreshCourse]);
 
     useEffect(() => {
         queueMicrotask(() => {
             void loadReviews(page);
         });
     }, [loadReviews, page]);
+
+    useEffect(() => {
+        queueMicrotask(() => {
+            void loadMyReview();
+        });
+    }, [loadMyReview]);
 
     const submitCreate = async (payload: CreateReviewPayload) => {
         setIsSubmitting(true);
@@ -171,6 +183,18 @@ const CourseReviews = ({ course, onCourseUpdated }: CourseReviewsProps) => {
             )}
 
             {renderReviewPrompt()}
+
+            {myReview && !reviewsPage.results.some((review) => review.id === myReview.id) && (
+                <div className={styles.list} aria-label="Ваш отзыв">
+                    <ReviewCard
+                        review={myReview}
+                        canManage
+                        isDeleting={deletingId === myReview.id}
+                        onEdit={setEditingReview}
+                        onDelete={deleteReview}
+                    />
+                </div>
+            )}
 
             {isLoading && <Loader text="Загрузка отзывов..." />}
             {error && <EmptyState variant="error" title="Не удалось загрузить отзывы" description={error} />}

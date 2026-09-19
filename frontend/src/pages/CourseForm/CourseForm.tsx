@@ -17,6 +17,7 @@ const EMPTY_FORM: CourseUpsertPayload = {
     category_id: 0,
     level: 'beginner',
     duration: 1,
+    price: '0.00',
     status: 'draft',
 };
 
@@ -49,6 +50,7 @@ const CourseForm = () => {
                         category_id: course.category.id,
                         level: course.level,
                         duration: course.duration,
+                        price: course.price,
                         status: course.status,
                     });
                 } else if (categoryItems[0]) {
@@ -74,6 +76,7 @@ const CourseForm = () => {
         if (!form.description.trim()) return 'Описание обязательно.';
         if (!form.category_id) return 'Категория обязательна.';
         if (form.duration <= 0) return 'Продолжительность должна быть больше нуля.';
+        if (Number(form.price) < 0) return 'Цена не может быть отрицательной.';
         return '';
     };
 
@@ -104,7 +107,7 @@ const CourseForm = () => {
     if (isLoading) return <Loader />;
 
     return (
-        <div className={styles.page}>
+        <div className={`${styles.page} container`}>
             <div className={styles.header}>
                 <div>
                     <h1>{isEdit ? 'Редактировать курс' : 'Новый курс'}</h1>
@@ -175,6 +178,14 @@ const CourseForm = () => {
                         min={1}
                         value={form.duration}
                         onChange={(event) => updateField('duration', Number(event.target.value))}
+                    />
+                    <Input
+                        label="Цена, ₸"
+                        type="number"
+                        min={0}
+                        step="100"
+                        value={form.price}
+                        onChange={(event) => updateField('price', event.target.value)}
                     />
                 </div>
                 <Button type="submit" isLoading={isSubmitting}>{isEdit ? 'Сохранить курс' : 'Создать курс'}</Button>

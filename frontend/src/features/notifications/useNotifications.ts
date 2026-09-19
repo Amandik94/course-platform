@@ -110,10 +110,11 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     }, [autoLoad, fetchNotifications]);
 
     useEffect(() => {
-        if (!pollUnread || !isAuthenticated) {
+        if (!isAuthenticated) {
             resetNotifications();
             return;
         }
+        if (!pollUnread) return;
 
         void refreshUnreadCount();
         const interval = window.setInterval(() => {

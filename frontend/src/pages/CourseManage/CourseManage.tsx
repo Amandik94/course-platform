@@ -10,7 +10,6 @@ import { quizService } from '../../services/quizService';
 import type { AssignmentDetail, AssignmentUpsertPayload } from '../../types/assignment';
 import type {
     CourseDetail,
-    Lesson,
     LessonDetail,
     LessonUpsertPayload,
     Section,
@@ -143,10 +142,7 @@ const CourseManage = () => {
             const lessonPairs = await Promise.all(
                 sectionItems.map(async (section) => {
                     const lessons = await courseService.getSectionLessons(section.id);
-                    const lessonDetails = await Promise.all(
-                        lessons.map((lesson: Lesson) => courseService.getLessonById(lesson.id)),
-                    );
-                    return [section.id, lessonDetails] as const;
+                    return [section.id, lessons] as const;
                 }),
             );
             const nextLessonsBySection = Object.fromEntries(lessonPairs);
@@ -493,7 +489,7 @@ const CourseManage = () => {
     if (!course) return <EmptyState title="Курс не найден" variant="error" />;
 
     return (
-        <div className={styles.page}>
+        <div className={`${styles.page} container`}>
             <div className={styles.header}>
                 <div>
                     <h1>{course.title}</h1>

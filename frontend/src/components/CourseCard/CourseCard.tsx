@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { CourseListItem } from '../../types/course';
 import { COURSE_LEVEL_LABELS, pluralizeRu } from '../../utils/labels';
+import { formatKzt, isPaidAmount } from '../../utils/formatMoney';
 import styles from './CourseCard.module.css';
 
 const LEVEL_COLOR_VAR: Record<string, string> = {
@@ -18,7 +19,7 @@ const CourseCard = ({ course }: CourseCardProps) => {
     return (
         <Link to={`/courses/${course.id}`} className={styles.card}>
             {course.cover ? (
-                <img src={course.cover} alt={course.title} className={styles.cover} />
+                <img src={course.cover} alt={course.title} className={styles.cover} loading="lazy" />
             ) : (
                 <div className={styles.coverPlaceholder}>Нет обложки</div>
             )}
@@ -40,6 +41,10 @@ const CourseCard = ({ course }: CourseCardProps) => {
                     ) : (
                         <span>Нет отзывов</span>
                     )}
+                </div>
+
+                <div className={isPaidAmount(course.price) ? styles.price : styles.freePrice}>
+                    {formatKzt(course.price)}
                 </div>
 
                 <div className={styles.meta}>

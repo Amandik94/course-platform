@@ -17,6 +17,7 @@ export interface Review {
 export interface ReviewFilters {
     page?: number;
     ordering?: string;
+    mine?: boolean;
 }
 
 export interface CreateReviewPayload {

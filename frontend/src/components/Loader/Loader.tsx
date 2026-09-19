@@ -5,7 +5,7 @@ interface LoaderProps {
 }
 
 const Loader = ({ text = 'Загрузка...' }: LoaderProps) => (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} role="status" aria-live="polite">
         <span className={styles.spinner} />
         <span>{text}</span>
     </div>

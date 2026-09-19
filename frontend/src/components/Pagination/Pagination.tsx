@@ -9,34 +9,30 @@ interface PaginationProps {
 const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
     if (totalPages <= 1) return null;
 
-    const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
-
     return (
-        <div className={styles.wrapper}>
+        <nav className={styles.wrapper} aria-label="Постраничная навигация">
             <button
+                type="button"
                 className={styles.pageButton}
                 disabled={currentPage === 1}
                 onClick={() => onPageChange(currentPage - 1)}
+                aria-label="Предыдущая страница"
             >
                 ←
             </button>
-            {pages.map((page) => (
-                <button
-                    key={page}
-                    className={`${styles.pageButton} ${page === currentPage ? styles.active : ''}`}
-                    onClick={() => onPageChange(page)}
-                >
-                    {page}
-                </button>
-            ))}
+            <span className={styles.pageStatus} aria-live="polite">
+                Страница {currentPage} из {totalPages}
+            </span>
             <button
+                type="button"
                 className={styles.pageButton}
                 disabled={currentPage === totalPages}
                 onClick={() => onPageChange(currentPage + 1)}
+                aria-label="Следующая страница"
             >
                 →
             </button>
-        </div>
+        </nav>
     );
 };
 

@@ -1,5 +1,5 @@
 .page {
-    padding: var(--spacing-xl) 0;
+    padding-block: var(--spacing-xl);
 }
 
 .header {
@@ -40,11 +40,22 @@
     margin: var(--spacing-sm) 0;
 }
 
+.priceLine {
+    margin-top: var(--spacing-sm);
+    font-size: var(--font-size-md);
+    color: var(--color-text);
+}
+
+.priceLine strong {
+    color: var(--color-primary);
+}
+
 .actionRow {
     margin-top: var(--spacing-md);
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 
 .errorText {
@@ -89,4 +100,14 @@
     .cover {
         width: 100%;
     }
+}
+
+.sectionHeading {
+    margin-top: var(--spacing-lg);
+}
+
+.info,
+.errorText {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }

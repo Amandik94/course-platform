@@ -47,7 +47,7 @@ const AssignmentPage = () => {
 
             <div className={styles.meta}>
                 Максимальный балл: {assignment.max_score}
-                {assignment.deadline && ` · Дедлайн: ${new Date(assignment.deadline).toLocaleDateString()}`}
+                {assignment.deadline && ` · Дедлайн: ${new Date(assignment.deadline).toLocaleDateString('ru-RU')}`}
             </div>
 
             <div className={styles.description}>{assignment.description}</div>
@@ -55,13 +55,16 @@ const AssignmentPage = () => {
             <form onSubmit={handleSubmit}>
                 {submitError && <div className={styles.errorText}>{submitError}</div>}
 
-                <textarea
-                    className={styles.codeArea}
-                    value={displayedCode}
-                    onChange={(e) => setCode(e.target.value)}
-                    spellCheck={false}
-                    disabled={!isEditable}
-                />
+                <label className={styles.solutionField}>
+                    <span>Ваше решение</span>
+                    <textarea
+                        className={styles.codeArea}
+                        value={displayedCode}
+                        onChange={(e) => setCode(e.target.value)}
+                        spellCheck={false}
+                        disabled={!isEditable}
+                    />
+                </label>
 
                 {isEditable && (
                     <Button type="submit" isLoading={isSubmitting}>

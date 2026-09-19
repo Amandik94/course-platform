@@ -55,12 +55,12 @@ const QuizPage = () => {
         return (
             <div className={`${styles.page} container`}>
                 <div className={`${styles.resultCard} ${result.passed ? styles.resultPassed : styles.resultFailed}`}>
-                    <h2>{result.passed ? 'Тест пройден! 🎉' : 'Тест не пройден'}</h2>
+                    <h1>{result.passed ? 'Тест пройден!' : 'Тест не пройден'}</h1>
                     <div className={styles.resultScore}>{result.score}%</div>
                     <p>Проходной балл: {quiz.passing_score}%</p>
                 </div>
 
-                <h2 style={{ marginTop: 'var(--spacing-lg)' }}>Разбор ответов</h2>
+                <h2 className={styles.reviewHeading}>Разбор ответов</h2>
                 {quiz.questions.map((question) => {
                     const entry = result.answers_snapshot[String(question.id)];
                     return (
@@ -117,12 +117,15 @@ const QuizPage = () => {
                             ))}
 
                         {question.type === 'text' && (
-                            <input
-                                type="text"
-                                className={styles.textAnswerInput}
-                                value={draft[question.id]?.text ?? ''}
-                                onChange={(e) => setTextAnswer(question.id, e.target.value)}
-                            />
+                            <label className={styles.textAnswerField}>
+                                <span>Ваш ответ</span>
+                                <input
+                                    type="text"
+                                    className={styles.textAnswerInput}
+                                    value={draft[question.id]?.text ?? ''}
+                                    onChange={(e) => setTextAnswer(question.id, e.target.value)}
+                                />
+                            </label>
                         )}
                     </div>
                 ))}

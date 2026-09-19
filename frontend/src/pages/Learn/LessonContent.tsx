@@ -32,9 +32,7 @@ const LessonContent = ({
                 <div className={styles.videoWrapper}>
                     <iframe
                         src={lesson.video_url}
-                        width="100%"
-                        height="100%"
-                        style={{ border: 'none', borderRadius: 'var(--radius-md)' }}
+                        className={styles.videoFrame}
                         allow="autoplay; fullscreen"
                         title={lesson.title}
                     />

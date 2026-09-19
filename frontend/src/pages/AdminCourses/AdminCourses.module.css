@@ -1,5 +1,5 @@
 .page {
-    padding: var(--spacing-xl) 0;
+    padding-block: var(--spacing-xl);
 }
 
 .header {
@@ -76,5 +76,40 @@
 
     .tableRow {
         grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .tableRow > span,
+    .statusSelect,
+    .tableRow > .actions {
+        display: grid;
+        grid-template-columns: minmax(110px, 0.45fr) minmax(0, 1fr);
+        align-items: center;
+        gap: var(--spacing-sm);
+        overflow-wrap: anywhere;
+    }
+
+    .tableRow > span::before {
+        content: attr(data-label);
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .statusSelect::before {
+        content: 'Статус';
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-xs);
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .tableRow > .actions::before {
+        content: attr(data-label);
+        color: var(--color-text-secondary);
+        font-size: var(--font-size-xs);
+        font-weight: 700;
+        text-transform: uppercase;
     }
 }

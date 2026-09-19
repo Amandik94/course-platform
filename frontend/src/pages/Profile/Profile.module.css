@@ -1,5 +1,5 @@
 .page {
-    padding: var(--spacing-xl) 0;
+    padding-block: var(--spacing-xl);
 }
 
 .card {

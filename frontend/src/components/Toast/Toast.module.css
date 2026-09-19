@@ -15,6 +15,7 @@
     font-size: var(--font-size-sm);
     color: #ffffff;
     min-width: 240px;
+    max-width: min(420px, calc(100vw - 32px));
     animation: slideIn 0.2s ease;
 }
 
@@ -38,5 +39,18 @@
     to {
         transform: translateX(0);
         opacity: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        right: var(--spacing-md);
+        bottom: var(--spacing-md);
+        left: var(--spacing-md);
+    }
+
+    .toast {
+        width: 100%;
+        min-width: 0;
     }
 }

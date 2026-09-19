@@ -26,6 +26,9 @@ import { AdminUserDetail, AdminUsersList } from '../../pages/AdminUsers/AdminUse
 import AdminBlocked from '../../pages/AdminBlocked/AdminBlocked';
 import TeacherSubmissions from '../../pages/TeacherSubmissions/TeacherSubmissions';
 import NotificationsPage from '../../pages/Notifications/NotificationsPage';
+import PaymentSuccess from '../../pages/Payments/PaymentSuccess';
+import PaymentFailure from '../../pages/Payments/PaymentFailure';
+import Payments from '../../pages/Payments/Payments';
 
 export const router = createBrowserRouter([
     {
@@ -47,6 +50,9 @@ export const router = createBrowserRouter([
             { path: 'assignment/:id', element: <ProtectedRoute><AssignmentPage /></ProtectedRoute> },
             { path: 'certificates', element: <ProtectedRoute><Certificates /></ProtectedRoute> },
             { path: 'notifications', element: <ProtectedRoute><NotificationsPage /></ProtectedRoute> },
+            { path: 'payments', element: <ProtectedRoute><Payments /></ProtectedRoute> },
+            { path: 'payment/success', element: <ProtectedRoute><PaymentSuccess /></ProtectedRoute> },
+            { path: 'payment/failure', element: <ProtectedRoute><PaymentFailure /></ProtectedRoute> },
             { path: 'dashboard', element: <ProtectedRoute><Dashboard /></ProtectedRoute> },
             { path: 'dashboard/teacher', element: <RoleRoute allowedRoles={['teacher', 'admin']}><Dashboard /></RoleRoute> },
             { path: 'teacher/courses', element: <RoleRoute allowedRoles={['teacher', 'admin']}><TeacherCourses /></RoleRoute> },
