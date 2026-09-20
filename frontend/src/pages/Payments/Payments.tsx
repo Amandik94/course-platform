@@ -5,7 +5,7 @@ import { paymentService } from '../../services/paymentService';
 import type { Payment } from '../../types/payment';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 import { formatDateTime } from '../../utils/formatDate';
-import { formatKzt } from '../../utils/formatMoney';
+import { formatMoney } from '../../utils/formatMoney';
 import styles from './PaymentStatusPages.module.css';
 
 const PAYMENT_STATUS_LABELS: Record<Payment['status'], string> = {
@@ -70,7 +70,7 @@ const Payments = () => {
                                 <strong>{payment.course.title}</strong>
                                 <div className={styles.muted}>{formatDateTime(payment.created_at)}</div>
                             </div>
-                            <span>{formatKzt(payment.amount)}</span>
+                            <span>{formatMoney(payment.amount, payment.currency)}</span>
                             <span>{PAYMENT_STATUS_LABELS[payment.status]}</span>
                         </article>
                     ))}

@@ -7,7 +7,7 @@ export type PaymentStatus =
     | 'cancelled'
     | 'expired'
     | 'refunded';
-export type PaymentProvider = 'paybot' | 'freedompay';
+export type PaymentProvider = 'yookassa' | 'paybot' | 'freedompay';
 
 export interface PaymentCourse {
     id: number;
@@ -20,7 +20,7 @@ export interface Payment {
     id: number;
     course: PaymentCourse;
     amount: string;
-    currency: 'KZT';
+    currency: 'RUB' | 'KZT';
     status: PaymentStatus;
     provider: PaymentProvider;
     provider_payment_id: string;
@@ -32,7 +32,7 @@ export interface Payment {
 }
 
 export interface CreatePaymentResponse extends Payment {
-    deep_link: string;
+    redirect_url: string;
 }
 
 export interface PaymentPageState {

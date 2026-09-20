@@ -48,8 +48,12 @@ class CertificateDownloadView(CertificateDetailView):
         certificate = self.get_object()
         if not certificate.pdf:
             raise Http404
+        try:
+            pdf_file = certificate.pdf.open('rb')
+        except (FileNotFoundError, OSError):
+            raise Http404('Файл сертификата не найден.')
         return FileResponse(
-            certificate.pdf.open('rb'),
+            pdf_file,
             as_attachment=True,
             filename=f'{certificate.certificate_number}.pdf',
         )

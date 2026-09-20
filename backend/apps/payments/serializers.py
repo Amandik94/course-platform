@@ -31,15 +31,15 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 
 class CreatePaymentResponseSerializer(PaymentSerializer):
-    deep_link = serializers.URLField()
+    redirect_url = serializers.URLField()
 
     class Meta(PaymentSerializer.Meta):
-        fields = PaymentSerializer.Meta.fields + ('deep_link',)
+        fields = PaymentSerializer.Meta.fields + ('redirect_url',)
 
     def to_representation(self, instance):
-        payment, deep_link = instance
+        payment, redirect_url = instance
         data = PaymentSerializer(payment, context=self.context).data
-        data['deep_link'] = deep_link
+        data['redirect_url'] = redirect_url
         return data
 
 

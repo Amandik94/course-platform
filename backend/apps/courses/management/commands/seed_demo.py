@@ -105,7 +105,7 @@ COURSES = (
     },
     {
         'title': 'Python: ООП и чистый код', 'slug': 'demo-python-oop', 'category': 'demo-python',
-        'teacher': 0, 'level': 'junior', 'duration': 36, 'price': '4990', 'track': 'python_oop',
+        'teacher': 0, 'level': 'junior', 'duration': 36, 'price': '1490', 'track': 'python_oop',
         'short': 'Классы, композиция, исключения, типизация и поддерживаемый Python-код.',
         'description': 'Продолжение базового курса Python с акцентом на объектную модель, декомпозицию и практики написания понятного, тестируемого кода.',
         'sections': (
@@ -117,7 +117,7 @@ COURSES = (
     },
     {
         'title': 'Django для начинающих', 'slug': 'demo-django-start', 'category': 'demo-django',
-        'teacher': 2, 'level': 'junior', 'duration': 42, 'price': '7990', 'track': 'django',
+        'teacher': 2, 'level': 'junior', 'duration': 42, 'price': '1990', 'track': 'django',
         'short': 'Модели, представления, шаблоны и авторизация в Django.',
         'description': 'Курс проводит от создания проекта до готового веб-приложения с базой данных, формами и разграничением доступа пользователей.',
         'sections': (
@@ -130,7 +130,7 @@ COURSES = (
     {
         'title': 'Django REST Framework: создание REST API', 'slug': 'demo-drf-api',
         'category': 'demo-django', 'teacher': 2, 'level': 'middle', 'duration': 46,
-        'price': '9990', 'track': 'drf',
+        'price': '2490', 'track': 'drf',
         'short': 'Serializer, ViewSet, permissions, JWT и документирование API.',
         'description': 'Углублённый практический курс по разработке безопасного REST API на Django REST Framework с тестами и OpenAPI-документацией.',
         'sections': (
@@ -143,7 +143,7 @@ COURSES = (
     {
         'title': 'Современный JavaScript', 'slug': 'demo-modern-javascript',
         'category': 'demo-javascript', 'teacher': 3, 'level': 'junior', 'duration': 38,
-        'price': '6990', 'track': 'javascript',
+        'price': '1990', 'track': 'javascript',
         'short': 'ES-модули, DOM, асинхронность и работа с HTTP API.',
         'description': 'Курс систематизирует знания JavaScript и учит создавать интерактивные интерфейсы, работать с событиями, Promise и сетевыми запросами.',
         'sections': (
@@ -155,7 +155,7 @@ COURSES = (
     },
     {
         'title': 'React + TypeScript', 'slug': 'demo-react-typescript', 'category': 'demo-react',
-        'teacher': 1, 'level': 'middle', 'duration': 48, 'price': '12990', 'track': 'react',
+        'teacher': 1, 'level': 'middle', 'duration': 48, 'price': '2990', 'track': 'react',
         'short': 'Компоненты, hooks, маршрутизация, типизация и интеграция с REST API.',
         'description': 'Практический курс по созданию масштабируемого frontend-приложения на React и TypeScript с формами, состоянием и API-интеграцией.',
         'sections': (
@@ -168,7 +168,7 @@ COURSES = (
     {
         'title': 'PostgreSQL для разработчиков', 'slug': 'demo-postgresql',
         'category': 'demo-databases', 'teacher': 2, 'level': 'middle', 'duration': 34,
-        'price': '7990', 'track': 'postgresql',
+        'price': '1990', 'track': 'postgresql',
         'short': 'SQL, связи, индексы, транзакции и анализ запросов PostgreSQL.',
         'description': 'Курс учит проектировать реляционную базу данных и писать эффективные запросы, опираясь на реальные задачи backend-разработки.',
         'sections': (
@@ -181,7 +181,7 @@ COURSES = (
     {
         'title': 'Git и GitHub для разработчика', 'slug': 'demo-git-github',
         'category': 'demo-version-control', 'teacher': 3, 'level': 'beginner',
-        'duration': 18, 'price': '4990', 'track': 'git',
+        'duration': 18, 'price': '990', 'track': 'git',
         'short': 'Коммиты, ветки, merge, pull request и командный workflow.',
         'description': 'Курс объясняет ежедневную работу с Git и безопасное взаимодействие команды через GitHub на примере учебного проекта.',
         'sections': (
@@ -194,7 +194,7 @@ COURSES = (
     {
         'title': 'Docker для Junior-разработчика', 'slug': 'demo-docker-junior',
         'category': 'demo-devops', 'teacher': 2, 'level': 'junior', 'duration': 26,
-        'price': '8990', 'track': 'docker',
+        'price': '2490', 'track': 'docker',
         'short': 'Образы, контейнеры, volumes, сети и Docker Compose.',
         'description': 'Практический курс по упаковке Django и React приложений в контейнеры и организации локального окружения через Docker Compose.',
         'sections': (
@@ -207,7 +207,7 @@ COURSES = (
     {
         'title': 'Full-Stack Django + React', 'slug': 'demo-fullstack-django-react',
         'category': 'demo-backend', 'teacher': 3, 'level': 'advanced', 'duration': 72,
-        'price': '14990', 'track': 'fullstack', 'status': 'draft',
+        'price': '3990', 'track': 'fullstack', 'status': 'draft',
         'short': 'Полный цикл разработки LMS: REST API, React UI и Docker.',
         'description': 'Проектный курс объединяет Django REST Framework, React, PostgreSQL и Docker. Студент проектирует контракт и собирает приложение по слоям.',
         'sections': (

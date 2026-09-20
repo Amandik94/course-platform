@@ -1,12 +1,11 @@
 import json
-from datetime import timezone as datetime_timezone
+import logging
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import APIException, NotFound, PermissionDenied, ValidationError
@@ -25,17 +24,122 @@ from .serializers import (
     PaymentSerializer,
     PaymentWebhookResponseSerializer,
 )
-from .services import (
-    PayBotClient,
-    PayBotError,
-    is_fresh_webhook_timestamp,
-    verify_paybot_webhook_signature,
-)
+from .services import YooKassaClient, YooKassaError
 
 
-class PayBotUnavailable(APIException):
+logger = logging.getLogger(__name__)
+
+
+class YooKassaUnavailable(APIException):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-    default_detail = 'PayBot временно недоступен. Повторите попытку позже.'
+    default_detail = 'YooKassa временно недоступна. Повторите попытку позже.'
+
+
+def validate_provider_payment(provider_payment, payment):
+    if provider_payment.get('test') is not True:
+        raise ValidationError({'detail': 'Получен не тестовый платеж YooKassa.'})
+    amount = provider_payment.get('amount')
+    if not isinstance(amount, dict) or amount.get('currency') != 'RUB':
+        raise ValidationError({'detail': 'Валюта платежа YooKassa не совпадает с RUB.'})
+    try:
+        provider_amount = Decimal(str(amount.get('value'))).quantize(Decimal('0.01'))
+    except (InvalidOperation, TypeError):
+        raise ValidationError({'detail': 'Некорректная сумма платежа YooKassa.'})
+    if provider_amount != payment.amount.quantize(Decimal('0.01')):
+        raise ValidationError({'detail': 'Сумма YooKassa не совпадает с локальным платежом.'})
+    if payment.currency != 'RUB':
+        raise ValidationError({'detail': 'Локальный платеж создан не в RUB.'})
+
+    metadata = provider_payment.get('metadata')
+    if not isinstance(metadata, dict):
+        raise ValidationError({'detail': 'Платеж YooKassa не содержит metadata.'})
+    if str(metadata.get('payment_id') or '') != str(payment.id):
+        raise ValidationError({'detail': 'Идентификатор локального платежа не совпадает.'})
+    if str(metadata.get('order_id') or '') != payment.order_id:
+        raise ValidationError({'detail': 'Номер заказа YooKassa не совпадает.'})
+    if str(metadata.get('course_id') or '') != str(payment.course_id):
+        raise ValidationError({'detail': 'Идентификатор курса YooKassa не совпадает.'})
+
+
+def apply_payment_event(payment, event_type, callback):
+    update_fields = ['status', 'raw_callback', 'failure_reason', 'updated_at']
+    notify_student = False
+
+    if event_type == 'payment.succeeded':
+        if payment.status == Payment.Status.REFUNDED:
+            raise ValidationError({'detail': 'Возвращенный платеж нельзя снова завершить.'})
+        notify_student = payment.status != Payment.Status.PAID
+        payment.status = Payment.Status.PAID
+        payment.paid_at = payment.paid_at or timezone.now()
+        payment.failure_reason = ''
+        update_fields.append('paid_at')
+        Enrollment.objects.get_or_create(
+            student=payment.student,
+            course=payment.course,
+        )
+    elif event_type == 'payment.canceled':
+        if payment.status not in {Payment.Status.PAID, Payment.Status.REFUNDED}:
+            payment.status = Payment.Status.CANCELLED
+            payment.failure_reason = 'Платеж отменен.'
+
+    payment.raw_callback = callback
+    payment.save(update_fields=list(dict.fromkeys(update_fields)))
+
+    if notify_student:
+        create_notification(
+            user=payment.student,
+            type=Notification.Type.COURSE,
+            title='Оплата курса успешно завершена',
+            message=f'Курс «{payment.course.title}» добавлен в раздел «Мои курсы».',
+            link='/my-courses',
+        )
+
+
+def reconcile_yookassa_payment(payment):
+    """Synchronize a pending payment using YooKassa as the source of truth."""
+    if (
+        payment.status != Payment.Status.PENDING
+        or payment.provider != Payment.Provider.YOOKASSA
+        or not payment.provider_payment_id
+    ):
+        return payment
+
+    try:
+        provider_payment = YooKassaClient().get_payment(payment.provider_payment_id)
+    except YooKassaError as exc:
+        logger.warning('YooKassa payment status sync failed for payment %s: %s', payment.pk, exc)
+        return payment
+
+    provider_status = provider_payment.get('status')
+    event_type = {
+        'succeeded': 'payment.succeeded',
+        'canceled': 'payment.canceled',
+    }.get(provider_status)
+    if event_type is None:
+        return payment
+    if event_type == 'payment.succeeded' and provider_payment.get('paid') is not True:
+        raise ValidationError({'detail': 'YooKassa не подтвердила оплату платежа.'})
+
+    with transaction.atomic():
+        locked_payment = (
+            Payment.objects.select_for_update()
+            .select_related('student', 'course')
+            .get(pk=payment.pk)
+        )
+        validate_provider_payment(provider_payment, locked_payment)
+        callback = {
+            'event': event_type,
+            'source': 'status_sync',
+            'object': {
+                'id': payment.provider_payment_id,
+                'status': provider_status,
+                'paid': provider_payment.get('paid'),
+                'amount': provider_payment.get('amount'),
+                'test': provider_payment.get('test'),
+            },
+        }
+        apply_payment_event(locked_payment, event_type, callback)
+        return locked_payment
 
 
 @extend_schema_view(
@@ -69,13 +173,18 @@ class PaymentDetailView(generics.RetrieveAPIView):
             return queryset
         return queryset.filter(student=self.request.user)
 
+    def retrieve(self, request, *args, **kwargs):
+        payment = reconcile_yookassa_payment(self.get_object())
+        serializer = self.get_serializer(payment)
+        return Response(serializer.data)
+
 
 class CreatePaymentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
         tags=['Платежи'],
-        summary='Создать Sandbox-платеж PayBot',
+        summary='Создать тестовый платеж YooKassa',
         request=CreatePaymentSerializer,
         responses={201: CreatePaymentResponseSerializer, 200: CreatePaymentResponseSerializer},
     )
@@ -97,33 +206,24 @@ class CreatePaymentView(APIView):
                 raise ValidationError({
                     'detail': 'Этот курс бесплатный. Используйте обычную запись на курс.'
                 })
-            if course.price != course.price.to_integral_value():
-                raise ValidationError({
-                    'detail': 'Цена для оплаты через PayBot должна быть указана в целых тенге.'
-                })
 
             payment = (
                 Payment.objects.filter(
                     student=request.user,
                     course=course,
-                    provider=Payment.Provider.PAYBOT,
+                    provider=Payment.Provider.YOOKASSA,
                     status=Payment.Status.PENDING,
                 )
                 .order_by('-created_at')
                 .first()
             )
-            if payment and payment.expires_at and payment.expires_at <= timezone.now():
-                payment.status = Payment.Status.EXPIRED
-                payment.save(update_fields=['status', 'updated_at'])
-                payment = None
-
             if payment is None:
                 payment = Payment.objects.create(
                     student=request.user,
                     course=course,
                     amount=course.price,
-                    currency='KZT',
-                    provider=Payment.Provider.PAYBOT,
+                    currency='RUB',
+                    provider=Payment.Provider.YOOKASSA,
                     idempotency_key=str(uuid4()),
                     order_id=f'LMS-{uuid4().hex}',
                 )
@@ -135,9 +235,16 @@ class CreatePaymentView(APIView):
             )
             return Response(response_serializer.data, status=status.HTTP_200_OK)
 
+        return_url = (
+            f'{settings.PUBLIC_FRONTEND_URL.rstrip("/")}/payment/success'
+            f'?payment_id={payment.id}&course_id={course.id}'
+        )
         try:
-            provider_response = PayBotClient().create_qr(payment=payment)
-        except PayBotError as exc:
+            provider_response = YooKassaClient().create_payment(
+                payment=payment,
+                return_url=return_url,
+            )
+        except YooKassaError as exc:
             payment.failure_reason = str(exc)
             update_fields = ['failure_reason', 'updated_at']
             if not exc.retryable:
@@ -145,27 +252,16 @@ class CreatePaymentView(APIView):
                 update_fields.append('status')
             payment.save(update_fields=update_fields)
             if exc.retryable:
-                raise PayBotUnavailable(str(exc))
+                raise YooKassaUnavailable(str(exc))
             raise ValidationError({'detail': str(exc)})
 
-        expires_at = parse_datetime(provider_response['expires_at'])
-        if expires_at is None:
-            payment.status = Payment.Status.FAILED
-            payment.failure_reason = 'PayBot вернул некорректный срок действия QR.'
-            payment.save(update_fields=['status', 'failure_reason', 'updated_at'])
-            raise ValidationError({'detail': payment.failure_reason})
-        if timezone.is_naive(expires_at):
-            expires_at = timezone.make_aware(expires_at, datetime_timezone.utc)
-
-        payment.provider_payment_id = provider_response['operation_id']
-        payment.provider_redirect_url = provider_response['deep_link']
-        payment.expires_at = expires_at
+        payment.provider_payment_id = provider_response['provider_payment_id']
+        payment.provider_redirect_url = provider_response['redirect_url']
         payment.failure_reason = ''
         payment.save(
             update_fields=[
                 'provider_payment_id',
                 'provider_redirect_url',
-                'expires_at',
                 'failure_reason',
                 'updated_at',
             ]
@@ -178,156 +274,82 @@ class CreatePaymentView(APIView):
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
-class PayBotWebhookView(APIView):
+class YooKassaWebhookView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     @extend_schema(
         tags=['Платежи'],
-        summary='Webhook PayBot',
+        summary='HTTP-уведомление YooKassa',
         request=None,
         responses={200: PaymentWebhookResponseSerializer},
         auth=[],
     )
     def post(self, request):
-        webhook_id = request.headers.get('X-Webhook-ID', '')
-        event_header = request.headers.get('X-Webhook-Event', '')
-        timestamp = request.headers.get('X-Webhook-Timestamp', '')
-        signature = request.headers.get('X-Webhook-Signature', '')
-        raw_body = request.body
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            raise ValidationError({'detail': 'Некорректный JSON уведомления.'})
+        if not isinstance(payload, dict):
+            raise ValidationError({'detail': 'Некорректный формат уведомления.'})
 
-        if not all((webhook_id, event_header, timestamp, signature)):
-            raise ValidationError({'detail': 'Отсутствуют обязательные заголовки webhook.'})
-        if not is_fresh_webhook_timestamp(timestamp):
-            raise ValidationError({'detail': 'Webhook timestamp устарел или некорректен.'})
-        if not settings.PAYBOT_WEBHOOK_SECRET:
-            raise PayBotUnavailable('Не настроена переменная PAYBOT_WEBHOOK_SECRET.')
-        if not verify_paybot_webhook_signature(
-            timestamp=timestamp,
-            raw_body=raw_body,
-            signature=signature,
-            secret=settings.PAYBOT_WEBHOOK_SECRET,
-        ):
-            return Response(
-                {'detail': 'Некорректная подпись webhook.'},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+        event_type = payload.get('event')
+        if event_type not in {'payment.succeeded', 'payment.canceled'}:
+            return Response({'status': 'ignored'}, status=status.HTTP_200_OK)
+        notification_object = payload.get('object')
+        if not isinstance(notification_object, dict):
+            raise ValidationError({'detail': 'Уведомление не содержит объект платежа.'})
+        provider_payment_id = str(notification_object.get('id') or '')
+        if not provider_payment_id:
+            raise ValidationError({'detail': 'Уведомление не содержит идентификатор платежа.'})
 
         try:
-            payload = json.loads(raw_body.decode('utf-8'))
-        except (UnicodeDecodeError, json.JSONDecodeError):
-            raise ValidationError({'detail': 'Некорректный JSON webhook.'})
-        if not isinstance(payload, dict):
-            raise ValidationError({'detail': 'Некорректный формат webhook.'})
+            provider_payment = YooKassaClient().get_payment(provider_payment_id)
+        except YooKassaError as exc:
+            raise YooKassaUnavailable(str(exc))
 
-        event_type = payload.get('event') or payload.get('type')
-        if event_type != event_header:
-            raise ValidationError({'detail': 'Тип события webhook не совпадает с заголовком.'})
-        supported_events = {
-            'payment.completed',
-            'payment.cancelled',
-            'payment.expired',
-            'payment.refunded',
-            'webhook.test',
-        }
-        if event_type not in supported_events:
-            raise ValidationError({'detail': 'Неподдерживаемый тип события webhook.'})
+        expected_provider_status = {
+            'payment.succeeded': 'succeeded',
+            'payment.canceled': 'canceled',
+        }[event_type]
+        if provider_payment.get('status') != expected_provider_status:
+            raise ValidationError({'detail': 'Статус платежа YooKassa не подтверждает событие.'})
+        if event_type == 'payment.succeeded' and provider_payment.get('paid') is not True:
+            raise ValidationError({'detail': 'YooKassa не подтвердила оплату платежа.'})
 
         with transaction.atomic():
-            _, created = ProcessedWebhook.objects.get_or_create(
-                provider=Payment.Provider.PAYBOT,
-                webhook_id=webhook_id,
-                defaults={'event_type': event_type},
-            )
-            if not created:
-                return Response({'status': 'duplicate'}, status=status.HTTP_200_OK)
-            if event_type == 'webhook.test':
-                return Response({'status': 'ok'}, status=status.HTTP_200_OK)
-
-            data = payload.get('data')
-            if not isinstance(data, dict):
-                raise ValidationError({'detail': 'Webhook не содержит payment data.'})
-            operation_id = str(data.get('operation_id') or '')
-            if not operation_id:
-                raise ValidationError({'detail': 'Webhook не содержит operation_id.'})
-            if event_type == 'payment.completed' and data.get('status') != 'paid':
-                raise ValidationError({
-                    'detail': 'Статус операции не подтверждает успешную оплату.'
-                })
-
             try:
                 payment = (
                     Payment.objects.select_for_update()
                     .select_related('student', 'course')
                     .get(
-                        provider=Payment.Provider.PAYBOT,
-                        provider_payment_id=operation_id,
+                        provider=Payment.Provider.YOOKASSA,
+                        provider_payment_id=provider_payment_id,
                     )
                 )
             except Payment.DoesNotExist:
-                raise NotFound('Платеж PayBot не найден.')
+                raise NotFound('Платеж YooKassa не найден.')
 
-            if event_type in {'payment.completed', 'payment.refunded'}:
-                try:
-                    event_amount = Decimal(str(data.get('amount', '')))
-                except (InvalidOperation, TypeError):
-                    raise ValidationError({'detail': 'Некорректная сумма webhook.'})
-                if event_amount.quantize(Decimal('0.01')) != payment.amount:
-                    raise ValidationError({'detail': 'Сумма webhook не совпадает с платежом.'})
+            validate_provider_payment(provider_payment, payment)
+            webhook_id = f'{event_type}:{provider_payment_id}'
+            _, created = ProcessedWebhook.objects.get_or_create(
+                provider=Payment.Provider.YOOKASSA,
+                webhook_id=webhook_id,
+                defaults={'event_type': event_type},
+            )
+            if not created:
+                return Response({'status': 'duplicate'}, status=status.HTTP_200_OK)
 
-            sanitized_callback = {
-                'id': payload.get('id'),
+            callback = {
                 'event': event_type,
-                'created_at': payload.get('created_at'),
-                'data': {
-                    'operation_id': operation_id,
-                    'amount': data.get('amount'),
-                    'status': data.get('status'),
+                'object': {
+                    'id': provider_payment_id,
+                    'status': provider_payment.get('status'),
+                    'paid': provider_payment.get('paid'),
+                    'amount': provider_payment.get('amount'),
+                    'test': provider_payment.get('test'),
                 },
             }
-            self._apply_event(payment, event_type, sanitized_callback)
+            apply_payment_event(payment, event_type, callback)
 
         return Response({'status': 'ok'}, status=status.HTTP_200_OK)
-
-    @staticmethod
-    def _apply_event(payment, event_type, callback):
-        update_fields = ['status', 'raw_callback', 'failure_reason', 'updated_at']
-        notify_student = False
-
-        if event_type == 'payment.completed':
-            if payment.status == Payment.Status.REFUNDED:
-                raise ValidationError({'detail': 'Возвращенный платеж нельзя снова завершить.'})
-            notify_student = payment.status != Payment.Status.PAID
-            payment.status = Payment.Status.PAID
-            payment.paid_at = payment.paid_at or timezone.now()
-            payment.failure_reason = ''
-            update_fields.append('paid_at')
-            Enrollment.objects.get_or_create(
-                student=payment.student,
-                course=payment.course,
-            )
-        elif event_type == 'payment.cancelled':
-            if payment.status not in {Payment.Status.PAID, Payment.Status.REFUNDED}:
-                payment.status = Payment.Status.CANCELLED
-                payment.failure_reason = 'Платеж отменен.'
-        elif event_type == 'payment.expired':
-            if payment.status not in {Payment.Status.PAID, Payment.Status.REFUNDED}:
-                payment.status = Payment.Status.EXPIRED
-                payment.failure_reason = 'Срок действия QR истек.'
-        elif event_type == 'payment.refunded':
-            if payment.status not in {Payment.Status.PAID, Payment.Status.REFUNDED}:
-                raise ValidationError({'detail': 'Возврат допустим только для оплаченного платежа.'})
-            payment.status = Payment.Status.REFUNDED
-            payment.failure_reason = ''
-
-        payment.raw_callback = callback
-        payment.save(update_fields=list(dict.fromkeys(update_fields)))
-
-        if notify_student:
-            create_notification(
-                user=payment.student,
-                type=Notification.Type.COURSE,
-                title='Оплата курса успешно завершена',
-                message=f'Курс «{payment.course.title}» добавлен в раздел «Мои курсы».',
-                link='/my-courses',
-            )

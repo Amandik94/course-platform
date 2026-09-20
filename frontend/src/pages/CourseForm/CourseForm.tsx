@@ -180,7 +180,7 @@ const CourseForm = () => {
                         onChange={(event) => updateField('duration', Number(event.target.value))}
                     />
                     <Input
-                        label="Цена, ₸"
+                        label="Цена, ₽"
                         type="number"
                         min={0}
                         step="100"

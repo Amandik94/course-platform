@@ -51,7 +51,7 @@ const paidCourse: CourseDetailType = {
     },
     level: 'beginner',
     duration: 12,
-    price: '12000.00',
+    price: '2990.00',
     status: 'published',
     lessons_count: 8,
     average_rating: 0,
@@ -71,7 +71,7 @@ function renderPage() {
     );
 }
 
-describe('CourseDetail PayBot flow', () => {
+describe('CourseDetail YooKassa flow', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         useAuthStore.setState({
@@ -112,7 +112,7 @@ describe('CourseDetail PayBot flow', () => {
 
     it('shows an API error and enables retry', async () => {
         vi.mocked(paymentService.createPayment).mockRejectedValue(
-            new Error('PayBot временно недоступен'),
+            new Error('YooKassa временно недоступна'),
         );
         const user = userEvent.setup();
         renderPage();

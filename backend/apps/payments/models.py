@@ -13,7 +13,8 @@ class Payment(models.Model):
 
     class Provider(models.TextChoices):
         FREEDOM_PAY = 'freedompay', 'Freedom Pay'
-        PAYBOT = 'paybot', 'PayBot'
+        PAYBOT = 'paybot', 'PayBot (архив)'
+        YOOKASSA = 'yookassa', 'YooKassa'
 
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -27,12 +28,12 @@ class Payment(models.Model):
         related_name='payments',
     )
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    currency = models.CharField(max_length=3, default='KZT')
+    currency = models.CharField(max_length=3, default='RUB')
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     provider = models.CharField(
         max_length=30,
         choices=Provider.choices,
-        default=Provider.PAYBOT,
+        default=Provider.YOOKASSA,
     )
     provider_payment_id = models.CharField(max_length=100, blank=True)
     provider_redirect_url = models.URLField(blank=True)

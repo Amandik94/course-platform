@@ -6,7 +6,7 @@ import Loader from '../../components/Loader/Loader';
 import { paymentService } from '../../services/paymentService';
 import type { Payment } from '../../types/payment';
 import { getApiErrorMessage } from '../../utils/apiErrorMessage';
-import { formatKzt } from '../../utils/formatMoney';
+import { formatMoney } from '../../utils/formatMoney';
 import styles from './PaymentStatusPages.module.css';
 
 const MAX_ATTEMPTS = 8;
@@ -102,7 +102,7 @@ const PaymentSuccess = () => {
                             ? 'Платёж возвращён. Доступ к курсу регулируется правилами возврата платформы.'
                             : isFailed
                                 ? 'Платёж не был завершён. Вернитесь к курсу, чтобы попробовать снова.'
-                                : 'Платёж обрабатывается. Доступ появится после подписанного подтверждения от PayBot.'}
+                                : 'Платёж обрабатывается. Доступ появится после подтверждения от YooKassa.'}
                 </p>
                 <div className={`${styles.status} ${isPaid ? styles.success : ''} ${isFailed ? styles.error : ''}`}>
                     {isPaid
@@ -114,7 +114,7 @@ const PaymentSuccess = () => {
                                 : 'Платёж обрабатывается'}
                 </div>
                 <p className={styles.muted}>
-                    {payment.course.title} · {formatKzt(payment.amount)}
+                    {payment.course.title} · {formatMoney(payment.amount, payment.currency)}
                 </p>
                 <div className={styles.actions}>
                     {isPaid && (

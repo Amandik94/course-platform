@@ -164,10 +164,11 @@ SPECTACULAR_SETTINGS = {
 
 AUTH_USER_MODEL = 'users.User'
 
-PAYBOT_API_KEY = config('PAYBOT_API_KEY', default='')
-PAYBOT_API_URL = config('PAYBOT_API_URL', default='https://api.paybot.kz')
-PAYBOT_WEBHOOK_SECRET = config('PAYBOT_WEBHOOK_SECRET', default='')
-PAYBOT_TIMEOUT_SECONDS = config('PAYBOT_TIMEOUT_SECONDS', default=15, cast=int)
+YOOKASSA_SHOP_ID = config('YOOKASSA_SHOP_ID', default='')
+YOOKASSA_SECRET_KEY = config('YOOKASSA_SECRET_KEY', default='')
+YOOKASSA_API_URL = config('YOOKASSA_API_URL', default='https://api.yookassa.ru/v3')
+YOOKASSA_TIMEOUT_SECONDS = config('YOOKASSA_TIMEOUT_SECONDS', default=15, cast=int)
+PUBLIC_FRONTEND_URL = config('PUBLIC_FRONTEND_URL', default='http://localhost')
 
 LOGGING = {
     'version': 1,

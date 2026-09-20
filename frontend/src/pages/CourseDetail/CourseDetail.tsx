@@ -13,7 +13,7 @@ import { getApiErrorMessage } from '../../utils/apiErrorMessage';
 import { useToast } from '../../components/Toast/useToast';
 import CourseReviews from '../../features/reviews/CourseReviews';
 import { COURSE_LEVEL_LABELS, pluralizeRu } from '../../utils/labels';
-import { formatKzt, isPaidAmount } from '../../utils/formatMoney';
+import { formatCoursePrice, isPaidAmount } from '../../utils/formatMoney';
 
 const CourseDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -97,7 +97,7 @@ const CourseDetail = () => {
             const payment = await paymentService.createPayment(course.id);
             sessionStorage.setItem('lastPaymentId', String(payment.id));
             sessionStorage.setItem('lastPaymentCourseId', String(course.id));
-            window.location.assign(payment.deep_link);
+            window.location.assign(payment.redirect_url);
         } catch (err) {
             const message = getApiErrorMessage(err) || 'Не удалось создать платеж. Попробуйте еще раз.';
             setPaymentError(message);
@@ -125,14 +125,14 @@ const CourseDetail = () => {
                         <span className={styles.badge}>
                             {course.lessons_count} {pluralizeRu(course.lessons_count, ['урок', 'урока', 'уроков'])}
                         </span>
-                        <span className={styles.badge}>{formatKzt(course.price)}</span>
+                        <span className={styles.badge}>{formatCoursePrice(course.price)}</span>
                     </div>
 
                     <h1>{course.title}</h1>
                     <p className={styles.teacher}>Преподаватель: {course.teacher.full_name}</p>
                     <p>{course.short_description}</p>
                     <p className={styles.priceLine}>
-                        Цена: <strong>{formatKzt(course.price)}</strong>
+                        Цена: <strong>{formatCoursePrice(course.price)}</strong>
                     </p>
 
                     <div className={styles.actionRow}>
@@ -148,7 +148,7 @@ const CourseDetail = () => {
                         )}
                         {isAuthenticated && user?.role === 'student' && !course.is_enrolled && isPaidAmount(course.price) && (
                             <Button onClick={() => void handleBuyCourse()} isLoading={isCreatingPayment}>
-                                Купить курс — {formatKzt(course.price)}
+                                Купить курс — {formatCoursePrice(course.price)}
                             </Button>
                         )}
                         {course.is_enrolled && (

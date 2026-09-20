@@ -1,156 +1,190 @@
-import hashlib
-import hmac
+import base64
 import json
-import time
 import urllib.error
+import urllib.parse
 import urllib.request
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from django.conf import settings
 
 
-class PayBotError(Exception):
+class YooKassaError(Exception):
     def __init__(self, message: str, *, retryable: bool = False):
         super().__init__(message)
         self.retryable = retryable
 
 
-def verify_paybot_webhook_signature(
-    *,
-    timestamp: str,
-    raw_body: bytes,
-    signature: str,
-    secret: str,
-) -> bool:
-    if not timestamp or not signature.startswith('sha256=') or not secret:
-        return False
-    signed_payload = timestamp.encode('utf-8') + b'.' + raw_body
-    digest = hmac.new(secret.encode('utf-8'), signed_payload, hashlib.sha256).hexdigest()
-    expected = f'sha256={digest}'
-    return hmac.compare_digest(expected, signature)
-
-
-def is_fresh_webhook_timestamp(timestamp: str, *, tolerance_seconds: int = 300) -> bool:
-    try:
-        value = int(timestamp)
-    except (TypeError, ValueError):
-        return False
-    return abs(int(time.time()) - value) <= tolerance_seconds
-
-
-class PayBotClient:
+class YooKassaClient:
     def __init__(self):
-        self.api_key = settings.PAYBOT_API_KEY
-        self.api_url = settings.PAYBOT_API_URL.rstrip('/')
-        self.timeout = settings.PAYBOT_TIMEOUT_SECONDS
+        self.shop_id = settings.YOOKASSA_SHOP_ID
+        self.secret_key = settings.YOOKASSA_SECRET_KEY
+        self.api_url = settings.YOOKASSA_API_URL.rstrip('/')
+        self.timeout = settings.YOOKASSA_TIMEOUT_SECONDS
 
     def _ensure_configured(self) -> None:
-        if not self.api_key:
-            raise PayBotError('Не настроена переменная окружения PAYBOT_API_KEY.')
-        if not self.api_key.startswith('kp_test_'):
-            raise PayBotError(
-                'Для этой LMS разрешен только Sandbox-ключ PayBot с префиксом kp_test_.'
+        if not self.shop_id or not self.secret_key:
+            raise YooKassaError(
+                'Не настроены тестовые реквизиты YooKassa. '
+                'Укажите YOOKASSA_SHOP_ID и YOOKASSA_SECRET_KEY.'
             )
-        if not self.api_url.startswith('https://'):
-            raise PayBotError('PAYBOT_API_URL должен использовать HTTPS.')
+        parsed_url = urllib.parse.urlparse(self.api_url)
+        if parsed_url.scheme != 'https' or parsed_url.hostname != 'api.yookassa.ru':
+            raise YooKassaError(
+                'YOOKASSA_API_URL должен указывать на официальный HTTPS API YooKassa.'
+            )
 
-    def create_qr(self, *, payment) -> dict[str, Any]:
-        self._ensure_configured()
-        amount = Decimal(payment.amount)
-        if amount != amount.to_integral_value() or amount <= 0:
-            raise PayBotError('PayBot принимает сумму курса в целых тенге.')
+    def create_payment(self, *, payment, return_url: str) -> dict[str, Any]:
         if not payment.idempotency_key:
-            raise PayBotError('Для платежа отсутствует idempotency key.')
+            raise YooKassaError('Для платежа отсутствует ключ идемпотентности.')
+        if payment.currency != 'RUB':
+            raise YooKassaError('YooKassa-платёж должен быть создан в RUB.')
 
         payload = {
-            'amount': int(amount),
-            'description': f'Оплата курса «{payment.course.title}»',
+            'amount': {
+                'value': self._format_amount(payment.amount),
+                'currency': 'RUB',
+            },
+            'capture': True,
+            'confirmation': {
+                'type': 'redirect',
+                'return_url': return_url,
+            },
+            'description': f'Оплата курса «{payment.course.title}»'[:128],
             'metadata': {
                 'order_id': payment.order_id,
-                'payment_id': payment.id,
-                'course_id': payment.course_id,
+                'payment_id': str(payment.id),
+                'course_id': str(payment.course_id),
             },
         }
+        data = self._request(
+            'POST',
+            '/payments',
+            payload=payload,
+            idempotency_key=payment.idempotency_key,
+        )
+        return self._validate_created_payment(data, payment=payment)
+
+    def get_payment(self, provider_payment_id: str) -> dict[str, Any]:
+        if not provider_payment_id:
+            raise YooKassaError('Не указан идентификатор платежа YooKassa.')
+        safe_id = urllib.parse.quote(provider_payment_id, safe='')
+        data = self._request('GET', f'/payments/{safe_id}')
+        if str(data.get('id') or '') != provider_payment_id:
+            raise YooKassaError('YooKassa вернула другой идентификатор платежа.')
+        if data.get('test') is not True:
+            raise YooKassaError('Получен не тестовый объект платежа YooKassa.')
+        return data
+
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        payload: dict[str, Any] | None = None,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        self._ensure_configured()
+        credentials = base64.b64encode(
+            f'{self.shop_id}:{self.secret_key}'.encode('utf-8')
+        ).decode('ascii')
+        headers = {
+            'Authorization': f'Basic {credentials}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+        if idempotency_key:
+            headers['Idempotence-Key'] = idempotency_key
         request = urllib.request.Request(
-            f'{self.api_url}/v2/qr',
-            data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
-            headers={
-                'X-API-Key': self.api_key,
-                'Idempotency-Key': payment.idempotency_key,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            method='POST',
+            f'{self.api_url}{path}',
+            data=(
+                json.dumps(payload, ensure_ascii=False).encode('utf-8')
+                if payload is not None
+                else None
+            ),
+            headers=headers,
+            method=method,
         )
 
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 response_body = response.read()
         except urllib.error.HTTPError as exc:
-            message = self._extract_error_message(exc.read())
-            if 500 <= exc.code < 600:
-                raise PayBotError(
-                    'PayBot временно недоступен. Повторите попытку позже.',
+            exc.read()
+            if exc.code >= 500:
+                raise YooKassaError(
+                    'YooKassa временно недоступна. Повторите попытку позже.',
                     retryable=True,
                 ) from exc
-            raise PayBotError(message or 'PayBot отклонил создание платежа.') from exc
+            raise YooKassaError('YooKassa отклонила запрос на оплату.') from exc
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            raise PayBotError(
-                'Не удалось связаться с PayBot. Повторите попытку позже.',
+            raise YooKassaError(
+                'Не удалось связаться с YooKassa. Повторите попытку позже.',
                 retryable=True,
             ) from exc
 
         try:
             data = json.loads(response_body.decode('utf-8'))
         except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise PayBotError(
-                'PayBot вернул некорректный ответ.',
-                retryable=True,
+            raise YooKassaError(
+                'YooKassa вернула некорректный ответ.', retryable=True
             ) from exc
-
-        return self._validate_create_response(data, expected_amount=int(amount))
-
-    @staticmethod
-    def _extract_error_message(response_body: bytes) -> str:
-        try:
-            data = json.loads(response_body.decode('utf-8'))
-        except (UnicodeDecodeError, json.JSONDecodeError):
-            return ''
-        error = data.get('error')
-        if isinstance(error, dict):
-            return str(error.get('message') or error.get('detail') or '')
-        return str(data.get('message') or data.get('detail') or '')
-
-    @staticmethod
-    def _validate_create_response(data: Any, *, expected_amount: int) -> dict[str, Any]:
         if not isinstance(data, dict):
-            raise PayBotError('PayBot вернул некорректный формат ответа.', retryable=True)
+            raise YooKassaError(
+                'YooKassa вернула некорректный формат ответа.', retryable=True
+            )
+        return data
 
-        operation_id = data.get('operation_id')
-        deep_link = data.get('deep_link')
-        if not deep_link:
-            qr_token = data.get('qr_token')
-            if isinstance(qr_token, str) and qr_token.startswith(('https://', 'kaspi://')):
-                deep_link = qr_token
-        expires_at = data.get('expires_at') or data.get('expire_date')
-        provider_status = data.get('status')
+    @staticmethod
+    def _format_amount(amount: Decimal) -> str:
+        value = Decimal(amount)
+        if value <= 0:
+            raise YooKassaError('Сумма платежа должна быть больше нуля.')
+        return format(value.quantize(Decimal('0.01')), 'f')
 
-        if not operation_id or not isinstance(deep_link, str) or not deep_link:
-            raise PayBotError('PayBot не вернул идентификатор операции или ссылку оплаты.')
-        if not expires_at or not provider_status:
-            raise PayBotError('PayBot не вернул срок действия или статус QR.')
-        if data.get('amount') is not None:
-            try:
-                response_amount = int(data['amount'])
-            except (TypeError, ValueError) as exc:
-                raise PayBotError('PayBot вернул некорректную сумму.') from exc
-            if response_amount != expected_amount:
-                raise PayBotError('PayBot вернул сумму, не совпадающую с ценой курса.')
+    @classmethod
+    def _validate_created_payment(cls, data: dict[str, Any], *, payment) -> dict[str, Any]:
+        provider_payment_id = str(data.get('id') or '')
+        confirmation = data.get('confirmation')
+        redirect_url = confirmation.get('confirmation_url') if isinstance(confirmation, dict) else ''
+
+        if not provider_payment_id or not isinstance(redirect_url, str):
+            raise YooKassaError(
+                'YooKassa не вернула идентификатор платежа или ссылку подтверждения.'
+            )
+        cls._validate_confirmation_url(redirect_url)
+        if data.get('status') != 'pending':
+            raise YooKassaError('YooKassa вернула неожиданный статус нового платежа.')
+        if data.get('test') is not True:
+            raise YooKassaError('Создание платежей разрешено только в тестовом магазине YooKassa.')
+        cls._validate_amount(data.get('amount'), expected=payment.amount)
 
         return {
-            'operation_id': str(operation_id),
-            'deep_link': deep_link,
-            'expires_at': str(expires_at),
-            'status': str(provider_status),
+            'provider_payment_id': provider_payment_id,
+            'redirect_url': redirect_url,
+            'status': 'pending',
         }
+
+    @staticmethod
+    def _validate_confirmation_url(url: str) -> None:
+        parsed = urllib.parse.urlparse(url)
+        hostname = (parsed.hostname or '').lower()
+        allowed = (
+            hostname == 'yookassa.ru'
+            or hostname.endswith('.yookassa.ru')
+            or hostname == 'yoomoney.ru'
+            or hostname.endswith('.yoomoney.ru')
+        )
+        if parsed.scheme != 'https' or not allowed or hostname == 'api.yookassa.ru':
+            raise YooKassaError('YooKassa вернула недопустимую ссылку подтверждения.')
+
+    @staticmethod
+    def _validate_amount(amount: Any, *, expected: Decimal) -> None:
+        if not isinstance(amount, dict) or amount.get('currency') != 'RUB':
+            raise YooKassaError('Валюта платежа YooKassa не совпадает с RUB.')
+        try:
+            provider_amount = Decimal(str(amount.get('value'))).quantize(Decimal('0.01'))
+        except (InvalidOperation, TypeError):
+            raise YooKassaError('YooKassa вернула некорректную сумму платежа.')
+        if provider_amount != Decimal(expected).quantize(Decimal('0.01')):
+            raise YooKassaError('Сумма платежа YooKassa не совпадает с ценой курса.')

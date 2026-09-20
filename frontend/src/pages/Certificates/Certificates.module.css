@@ -27,3 +27,8 @@
 @media (max-width: 640px) {
     .grid { grid-template-columns: 1fr; }
 }
+
+.downloadError {
+    margin-top: var(--spacing-md);
+    color: var(--color-danger);
+}

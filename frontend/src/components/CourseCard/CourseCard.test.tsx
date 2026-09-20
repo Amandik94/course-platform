@@ -37,10 +37,10 @@ describe('CourseCard', () => {
         expect(screen.getByText('Бесплатно')).toBeInTheDocument();
     });
 
-    it('shows KZT price for paid courses', () => {
-        renderCard({ ...baseCourse, price: '12000.00' });
+    it('shows RUB price for paid courses', () => {
+        renderCard({ ...baseCourse, price: '2990.00' });
 
-        expect(screen.getByText(/12\s?000/)).toBeInTheDocument();
+        expect(screen.getByText(/2\s?990/)).toBeInTheDocument();
+        expect(screen.getByText(/₽|руб/)).toBeInTheDocument();
     });
 });
-
